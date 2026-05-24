@@ -1,0 +1,90 @@
+# State Schema
+
+OMPB persists runner state under `.ompb/`. All agents read/write through these
+shapes. Times are stored as `HH:MM:SS` or `MM:SS` strings; paces as `MM:SS` per km.
+
+## `runner-profile.json`
+```json
+{
+  "name": "string",
+  "age": 0,
+  "sex": "M | F | other | unspecified",
+  "weight_kg": 0,
+  "weekly_mileage_km": 0,
+  "experience": "beginner | intermediate | advanced",
+  "current_pb": {
+    "10k": "MM:SS",
+    "half": "H:MM:SS",
+    "full": "H:MM:SS"
+  },
+  "injury_history": ["string"],
+  "updated_at": "ISO-8601"
+}
+```
+
+## `goal.json`
+```json
+{
+  "event": "10k | half | full",
+  "target_time": "H:MM:SS",
+  "race_date": "YYYY-MM-DD",
+  "weeks_remaining": 0,
+  "race_name": "string",
+  "created_at": "ISO-8601"
+}
+```
+
+## `training-log.jsonl` (append-only, one JSON object per line)
+```json
+{"date":"YYYY-MM-DD","type":"easy|long|tempo|interval|recovery|race|cross|rest","planned":{"distance_km":0,"pace":"MM:SS","notes":"string"},"actual":{"distance_km":0,"pace":"MM:SS","avg_hr":0,"max_hr":0,"cadence":0,"rpe":0,"duration_s":0,"calories":0,"ascent_m":0,"notes":"string"},"sport":"running|cycling|swimming|walking|hiking|other","source":"csv|nl|api|fit","source_id":"string","logged_at":"ISO-8601"}
+```
+- `rpe`: rate of perceived exertion, 1–10.
+- `source`: how the entry arrived — `csv`/`nl`/`api`, or `fit` (Garmin/COROS .fit import).
+- `source_id`: stable id for the source activity (the .fit filename stem for COROS). Used to de-duplicate re-imports — an entry whose `source_id` already exists in the log is skipped.
+- `sport`: the recorded activity sport. Running maps to a running `type` (easy/long/…); every other sport is recorded with `type: "cross"` so total training load is captured. For non-running, `pace` and `cadence` are `null` (they are not comparable to running).
+- `reclassified_from_sport` (optional): present only when the importer reclassified an untagged `generic` activity into running based on running evidence (foot dynamics or a 2:30–9:00/km pace). Value is the original sport (`"generic"`). Lets analysis agents treat such entries as slightly lower-confidence.
+- `duration_s`, `calories`, `ascent_m`: optional enrichment from device imports (FIT). Absent fields are `null`.
+- A planned-but-not-done session has `actual: null` (missed); an unplanned session has `planned: null`.
+
+## `pb-history.json`
+```json
+{
+  "entries": [
+    {"event": "10k|half|full", "time": "H:MM:SS", "date": "YYYY-MM-DD", "race_name": "string"}
+  ]
+}
+```
+
+## `plan-state.json`
+```json
+{
+  "phase": "base | build | peak | taper",
+  "plan_week": 0,
+  "total_weeks": 0,
+  "this_week_target_km": 0,
+  "key_sessions": ["string"],
+  "last_adapted": "ISO-8601",
+  "critic_approved": true
+}
+```
+
+## `diagnosis.json` (optional — written by race-analyst, consumed by pb-deck)
+```json
+{
+  "summary": "one-paragraph plain-language overview of the training picture",
+  "limiter": "the #1 limiting factor (e.g. threshold endurance, speed, durability)",
+  "feasibility": "goal realism verdict + one-line rationale (omit if no goal set)",
+  "observations": ["evidence-backed observation", "..."],
+  "generated_at": "ISO-8601"
+}
+```
+
+## `decks/` (generated artifacts)
+`scripts/build_deck.py` writes self-contained HTML slide decks to `.ompb/decks/deck-<YYYY-MM-DD>.html`.
+These are derived outputs (regenerable from the log + JSON state); they are gitignored with the rest of `.ompb/`.
+
+## Conventions
+- `critic_approved` MUST be `true` before a plan is shown to the runner. `plan-critic` sets it.
+- Weekly volume ramp is capped at ~10%/week unless `plan-critic` explicitly approves an exception.
+- `data-logger` is the only writer of `training-log.jsonl`; it normalizes all input sources here.
+- If `runner-profile.json` is absent, treat the runner as new and collect the minimum fields first.

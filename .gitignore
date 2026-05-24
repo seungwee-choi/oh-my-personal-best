@@ -1,0 +1,17 @@
+# Runner state & personal training data (per-user runtime, never committed)
+.ompb/
+
+# OMC session telemetry / state
+.omc/
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+*.egg-info/
+
+# OS / editor
+.DS_Store
+.idea/
+*.iml

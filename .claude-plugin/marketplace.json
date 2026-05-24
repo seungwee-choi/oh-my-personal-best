@@ -1,0 +1,28 @@
+{
+  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
+  "name": "ompb",
+  "description": "Marathon coaching orchestration for Claude Code - natural-language routing to specialized coaching agents. Zero learning curve.",
+  "owner": {
+    "name": "oh-my-personal-best contributors"
+  },
+  "plugins": [
+    {
+      "name": "oh-my-personal-best",
+      "description": "Multi-agent orchestration for marathon time improvement (10K / Half / Full). Tell it your goal time in plain language; specialized coaching agents diagnose, plan, and verify. Zero learning curve.",
+      "version": "0.1.0",
+      "author": {
+        "name": "oh-my-personal-best contributors"
+      },
+      "source": "./",
+      "category": "productivity",
+      "tags": [
+        "marathon",
+        "running",
+        "coaching",
+        "multi-agent",
+        "training-plan"
+      ]
+    }
+  ],
+  "version": "0.1.0"
+}

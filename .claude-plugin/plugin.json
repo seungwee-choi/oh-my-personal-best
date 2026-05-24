@@ -1,0 +1,25 @@
+{
+  "name": "oh-my-personal-best",
+  "version": "0.1.0",
+  "description": "Multi-agent orchestration for marathon time improvement (10K / Half / Full). Zero learning curve.",
+  "author": {
+    "name": "oh-my-personal-best contributors"
+  },
+  "license": "MIT",
+  "keywords": [
+    "claude-code",
+    "plugin",
+    "multi-agent",
+    "marathon",
+    "running",
+    "coaching",
+    "training-plan"
+  ],
+  "skills": [
+    "./skills/race-plan/",
+    "./skills/weekly-adapt/",
+    "./skills/race-week/",
+    "./skills/pb-deck/"
+  ],
+  "commands": "./commands/"
+}

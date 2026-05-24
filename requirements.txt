@@ -1,0 +1,5 @@
+# oh-my-personal-best — Python dependencies
+#
+# scripts/import_csv.py uses the standard library only (no install needed).
+# scripts/import_fit.py parses binary Garmin/COROS .fit files and needs:
+fitdecode>=0.10.0
