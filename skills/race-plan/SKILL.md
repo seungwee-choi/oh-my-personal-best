@@ -33,7 +33,7 @@ goal; the pipeline does the rest.
 
 ## Step 1 — Ensure Runner State Exists
 
-Load `.ompb/runner-profile.json` and `.ompb/goal.json`.
+Load `$OMPB_HOME/runner-profile.json` and `$OMPB_HOME/goal.json`.
 
 If either file is missing or goal.json has no `target_time` / `race_date`, collect the minimum
 required fields from the runner before proceeding. Use data-logger (`oh-my-personal-best:data-logger`)
@@ -83,7 +83,7 @@ plan-architect must produce:
 - Key session types per phase (not full session prescriptions — those are session-coach's domain)
 - Target pace zones derived from race-analyst's fitness estimate
 
-plan-architect writes `.ompb/plan-state.json` with `critic_approved: false`.
+plan-architect writes `$OMPB_HOME/plan-state.json` with `critic_approved: false`.
 
 **Never show this plan to the runner yet.**
 
@@ -113,7 +113,9 @@ realism, injury history respect, rest days, and phase coherence.
 ### Gate logic (max 3 revision rounds):
 
 **If APPROVED:**
-- The orchestrator sets `critic_approved: true` in `plan-state.json`
+- The orchestrator sets `critic_approved: true` in `$OMPB_HOME/plan-state.json`
+- The orchestrator also snapshots the approved plan to `$OMPB_HOME/plans/plan-<YYYY-MM-DD>.json`
+  (today's date, never overwritten) to retain full plan history.
 - Proceed to Step 6
 
 **If REJECTED (round 1 or 2):**

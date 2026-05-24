@@ -36,14 +36,14 @@ level: 3
       emphasizes long run and aerobic threshold)
     - Target paces reference race-analyst's fitness estimate (VDOT or equivalent), not arbitrary
       numbers
-    - `plan-state.json` is written to `.ompb/plan-state.json` with `critic_approved:
+    - `plan-state.json` is written to `$OMPB_HOME/plan-state.json` with `critic_approved:
       false`
     - Output is explicitly handed to plan-critic for sign-off before the runner sees it
     - No session text (warmup reps cooldown) — that is session-coach's domain
   </Success_Criteria>
 
   <Constraints>
-    - Read `.ompb/goal.json`, `.ompb/runner-profile.json`, and
+    - Read `$OMPB_HOME/goal.json`, `$OMPB_HOME/runner-profile.json`, and
       race-analyst's fitness diagnosis before planning. Never plan without these inputs.
     - Never set `critic_approved: true` in `plan-state.json`. Leave it `false` always.
     - Weekly volume increases are hard-capped at ~10% unless plan-critic explicitly approves an
@@ -116,6 +116,12 @@ level: 3
 
     8. **Hand off to plan-critic.** Close with: "This plan is ready for plan-critic review. It has
        NOT been shown to the runner. critic_approved remains false."
+
+    9. **Plan snapshot on approval.** When plan-critic approves this plan, the orchestrator must — in
+       addition to setting `critic_approved: true` in `$OMPB_HOME/plan-state.json` — write a
+       timestamped snapshot of the approved plan to `$OMPB_HOME/plans/plan-<YYYY-MM-DD>.json`
+       (using today's date). This file is never overwritten, preserving the full history of every
+       approved plan.
   </Method>
 
   <Output>
@@ -126,7 +132,7 @@ level: 3
     Including down-week markers and taper structure.
 
     **2. `plan-state.json` content** — the exact JSON written to
-    `.ompb/plan-state.json`, with `critic_approved: false`.
+    `$OMPB_HOME/plan-state.json`, with `critic_approved: false`.
 
     Closing line (mandatory): "Awaiting plan-critic sign-off. Not shown to runner."
   </Output>

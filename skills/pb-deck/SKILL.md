@@ -28,12 +28,12 @@ they mean.
 <Steps>
 
 ## Step 1 — Ensure data exists
-Confirm `.ompb/training-log.jsonl` exists and is non-empty. If absent, tell the runner to import
+Confirm `$OMPB_HOME/training-log.jsonl` exists and is non-empty. If absent, tell the runner to import
 first (`/pb-log <path-to-.fit/.zip/.csv>`) and stop.
 
 ## Step 2 — Produce the diagnosis narrative (unless --no-diagnosis)
 Delegate to `oh-my-personal-best:race-analyst` to analyze the log (+ `goal.json`,
-`runner-profile.json` if present) and write `.ompb/diagnosis.json` with this shape:
+`runner-profile.json` if present) and write `$OMPB_HOME/diagnosis.json` with this shape:
 ```json
 {
   "summary": "one-paragraph plain-language overview of the training picture",
@@ -49,10 +49,10 @@ If the runner passed `--no-diagnosis`, skip this step — the deck renders pure 
 ## Step 3 — Render the deck
 Run:
 ```
-python3 scripts/build_deck.py --tz <local-tz> [--title "<title>"]
+python3 "$CLAUDE_PLUGIN_ROOT/scripts/build_deck.py" --home "$OMPB_HOME" --tz <local-tz> [--title "<title>"]
 ```
 `build_deck.py` reads the log and auto-discovers `diagnosis.json`, `goal.json`, `pb-history.json`,
-and `plan-state.json` in `.ompb/`, then writes `.ompb/decks/deck-<YYYY-MM-DD>.html`. It needs only
+and `plan-state.json` under `$OMPB_HOME`, then writes `$OMPB_HOME/decks/deck-<YYYY-MM-DD>.html`. It needs only
 the Python standard library. Slides for diagnosis / PBs / next block appear only when their source
 files exist; otherwise they are omitted (graceful degradation).
 

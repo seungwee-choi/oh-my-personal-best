@@ -43,6 +43,8 @@ import warnings
 import zipfile
 from typing import Iterator, Optional, Tuple
 
+from ompb_env import resolve_home, log_path
+
 try:
     import fitdecode
 except ImportError:
@@ -278,7 +280,9 @@ def main(argv=None) -> int:
     ap.add_argument("--tz", help="Local timezone (e.g. Asia/Seoul). Default: system local.")
     ap.add_argument("--long-threshold", type=float, default=19.0,
                     help="Running distance (km) at or above which type is 'long' (default 19).")
-    ap.add_argument("--dedup-against", help="Existing JSONL log; skip activities whose source_id is already present.")
+    ap.add_argument("--dedup-against", help="Existing JSONL log to dedup against (default: the resolved home log).")
+    ap.add_argument("--home", help="OMPB_HOME state dir. Default: smart-resolve ($OMPB_HOME -> ~/.ompb -> ./.ompb).")
+    ap.add_argument("--stdout", action="store_true", help="Write JSONL to stdout instead of appending to the home log.")
     ap.add_argument("--no-reclassify-generic", dest="reclassify_generic", action="store_false",
                     help="Disable reclassifying COROS 'generic' activities that look like runs into running.")
     ap.add_argument("--quiet", action="store_true", help="Suppress the per-sport summary on stderr.")
@@ -294,37 +298,48 @@ def main(argv=None) -> int:
             except Exception:
                 sys.stderr.write(f"warning: unknown timezone {args.tz!r}; using system local time.\n")
 
-    seen = load_seen(args.dedup_against)
+    home = resolve_home(args.home, create=True)
+    target = log_path(home)
+    seen = load_seen(args.dedup_against or target)
     by_type = {}
     by_sport = {}
     emitted = files_seen = skipped_dupe = errored = reclassified = 0
 
-    for fit_path, source_id in iter_fit_paths(args.paths):
-        files_seen += 1
-        if source_id in seen:
-            skipped_dupe += 1
-            continue
-        try:
-            for entry in parse_fit(fit_path, source_id, tz, args.long_threshold, args.reclassify_generic):
-                if entry["source_id"] in seen:
-                    skipped_dupe += 1
-                    continue
-                seen.add(entry["source_id"])
-                sys.stdout.write(json.dumps(entry, ensure_ascii=False) + "\n")
-                emitted += 1
-                by_type[entry["type"]] = by_type.get(entry["type"], 0) + 1
-                by_sport[entry["sport"]] = by_sport.get(entry["sport"], 0) + 1
-                if entry.get("reclassified_from_sport"):
-                    reclassified += 1
-        except Exception as e:
-            errored += 1
-            sys.stderr.write(f"# error parsing {os.path.basename(fit_path)}: {e}\n")
+    sink = sys.stdout if args.stdout else open(target, "a", encoding="utf-8")
+    try:
+        for fit_path, source_id in iter_fit_paths(args.paths):
+            files_seen += 1
+            if source_id in seen:
+                skipped_dupe += 1
+                continue
+            try:
+                for entry in parse_fit(fit_path, source_id, tz, args.long_threshold, args.reclassify_generic):
+                    if entry["source_id"] in seen:
+                        skipped_dupe += 1
+                        continue
+                    line = json.dumps(entry, ensure_ascii=False)
+                    json.loads(line)  # integrity guard: never write a line that won't parse back
+                    seen.add(entry["source_id"])
+                    sink.write(line + "\n")
+                    emitted += 1
+                    by_type[entry["type"]] = by_type.get(entry["type"], 0) + 1
+                    by_sport[entry["sport"]] = by_sport.get(entry["sport"], 0) + 1
+                    if entry.get("reclassified_from_sport"):
+                        reclassified += 1
+            except Exception as e:
+                errored += 1
+                sys.stderr.write(f"# error parsing {os.path.basename(fit_path)}: {e}\n")
+    finally:
+        if sink is not sys.stdout:
+            sink.close()
 
     if not args.quiet:
         sys.stderr.write(
             f"# import_fit.py: {files_seen} files, {emitted} activities emitted, "
             f"{skipped_dupe} duplicates skipped, {errored} errored.\n"
         )
+        if not args.stdout:
+            sys.stderr.write(f"#   appended to: {target}\n")
         if reclassified:
             sys.stderr.write(f"#   reclassified generic -> running: {reclassified}\n")
         if by_type:

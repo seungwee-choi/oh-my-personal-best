@@ -39,9 +39,9 @@ level: 2
 
   <Method>
     ## Step 1 — Load Context
-    Read `.ompb/runner-profile.json`: extract `weight_kg`, `experience`, `weekly_mileage_km`.
-    Read `.ompb/goal.json`: extract `event` (10k / half / full), `target_time`, `race_date`, `weeks_remaining`.
-    Read `.ompb/plan-state.json`: extract `phase` (base / build / peak / taper).
+    Read `$OMPB_HOME/runner-profile.json`: extract `weight_kg`, `experience`, `weekly_mileage_km`.
+    Read `$OMPB_HOME/goal.json`: extract `event` (10k / half / full), `target_time`, `race_date`, `weeks_remaining`.
+    Read `$OMPB_HOME/plan-state.json`: extract `phase` (base / build / peak / taper).
 
     Determine output mode from the request:
     - **Daily** — general training nutrition for the current phase

@@ -16,6 +16,7 @@
     "training-plan"
   ],
   "skills": [
+    "./skills/pb-setup/",
     "./skills/race-plan/",
     "./skills/weekly-adapt/",
     "./skills/race-week/",

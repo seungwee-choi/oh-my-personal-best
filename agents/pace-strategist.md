@@ -58,8 +58,8 @@ level: 2
 
   <Method>
     1. **Load inputs.** Read:
-       - `.ompb/goal.json` — event, target_time, race_date
-       - `.ompb/runner-profile.json` — current_pb, experience, weight_kg,
+       - `$OMPB_HOME/goal.json` — event, target_time, race_date
+       - `$OMPB_HOME/runner-profile.json` — current_pb, experience, weight_kg,
          injury_history
        - Race-analyst fitness estimate (VDOT or equivalent, predicted finish time, identified
          limiter)

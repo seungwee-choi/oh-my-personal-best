@@ -26,11 +26,11 @@ brief covers everything.
 ## Step 1 — Load Context
 
 Before firing the parallel consult, load:
-- `.ompb/goal.json` — event, target_time, race_date, weeks_remaining
-- `.ompb/runner-profile.json` — current_pb, weight_kg, experience, injury_history
-- `.ompb/plan-state.json` — current phase (should be taper), plan_week,
+- `$OMPB_HOME/goal.json` — event, target_time, race_date, weeks_remaining
+- `$OMPB_HOME/runner-profile.json` — current_pb, weight_kg, experience, injury_history
+- `$OMPB_HOME/plan-state.json` — current phase (should be taper), plan_week,
   this_week_target_km, critic_approved
-- Recent `.ompb/training-log.jsonl` — last 21 days to assess taper compliance and
+- Recent `$OMPB_HOME/training-log.jsonl` — last 21 days to assess taper compliance and
   detect any late-appearing pain signals
 
 Pass `$ARGUMENTS` (if provided) as additional race context — course profile, expected weather,

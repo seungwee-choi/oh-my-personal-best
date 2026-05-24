@@ -1,6 +1,6 @@
 # State Schema
 
-OMPB persists runner state under `.ompb/`. All agents read/write through these
+OMPB persists runner state under OMPB_HOME (smart-resolved $OMPB_HOME -> ~/.ompb -> ./.ompb). All agents read/write through these
 shapes. Times are stored as `HH:MM:SS` or `MM:SS` strings; paces as `MM:SS` per km.
 
 ## `runner-profile.json`
@@ -80,8 +80,13 @@ shapes. Times are stored as `HH:MM:SS` or `MM:SS` strings; paces as `MM:SS` per 
 ```
 
 ## `decks/` (generated artifacts)
-`scripts/build_deck.py` writes self-contained HTML slide decks to `.ompb/decks/deck-<YYYY-MM-DD>.html`.
-These are derived outputs (regenerable from the log + JSON state); they are gitignored with the rest of `.ompb/`.
+`scripts/build_deck.py` writes self-contained HTML slide decks to `$OMPB_HOME/decks/deck-<YYYY-MM-DD>.html`.
+These are derived outputs (regenerable from the log + JSON state); they are gitignored with the rest of `$OMPB_HOME`.
+
+## `plans/` (versioned plan snapshots)
+When plan-critic approves a plan, the orchestrator writes a timestamped snapshot to
+`$OMPB_HOME/plans/plan-<YYYY-MM-DD>.json`. These files are never overwritten, so the full
+history of every approved plan is retained.
 
 ## Conventions
 - `critic_approved` MUST be `true` before a plan is shown to the runner. `plan-critic` sets it.

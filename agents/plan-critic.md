@@ -50,11 +50,11 @@ disallowedTools: Write, Edit
     Write these down. Investigate each one specifically. This activates deliberate search rather than passive reading.
 
     ## Phase 2 — Load Context
-    Read `.ompb/runner-profile.json`: `age`, `sex`, `weight_kg`, `weekly_mileage_km`, `experience`, `current_pb` (10k / half / full), `injury_history`.
-    Read `.ompb/goal.json`: `event`, `target_time`, `race_date`, `weeks_remaining`.
-    Read `.ompb/plan-state.json`: `phase`, `plan_week`, `total_weeks`, `this_week_target_km`, `key_sessions`, `critic_approved`.
+    Read `$OMPB_HOME/runner-profile.json`: `age`, `sex`, `weight_kg`, `weekly_mileage_km`, `experience`, `current_pb` (10k / half / full), `injury_history`.
+    Read `$OMPB_HOME/goal.json`: `event`, `target_time`, `race_date`, `weeks_remaining`.
+    Read `$OMPB_HOME/plan-state.json`: `phase`, `plan_week`, `total_weeks`, `this_week_target_km`, `key_sessions`, `critic_approved`.
     Read the full training plan as presented (all weeks, all sessions).
-    Check `.ompb/training-log.jsonl` recent entries for any active `physio-advisor` overrides or reported pain signals.
+    Check `$OMPB_HOME/training-log.jsonl` recent entries for any active `physio-advisor` overrides or reported pain signals.
 
     ## Phase 3 — Physiological Checklist (evaluate every item)
 

@@ -42,14 +42,14 @@ level: 2
 
   <Method>
     ## Step 1 — Load Context
-    Read `.ompb/runner-profile.json` for `injury_history`, `age`, `experience`, and `weekly_mileage_km`.
-    Read the last 14–21 days of `.ompb/training-log.jsonl` entries. Extract:
+    Read `$OMPB_HOME/runner-profile.json` for `injury_history`, `age`, `experience`, and `weekly_mileage_km`.
+    Read the last 14–21 days of `$OMPB_HOME/training-log.jsonl` entries. Extract:
     - Weekly volume totals (compare week-over-week for ramp rate)
     - RPE trend (rising RPE at similar or slower paces = red flag for overtraining)
     - Missed sessions (`actual: null`) and their pattern
     - Session types: adequate easy/recovery days vs. excessive hard sessions
 
-    Read `.ompb/plan-state.json` for current `phase` and `this_week_target_km`.
+    Read `$OMPB_HOME/plan-state.json` for current `phase` and `this_week_target_km`.
 
     ## Step 2 — Triage the Signal
     Classify the reported symptom or detected load pattern using the traffic-light system:

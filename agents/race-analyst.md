@@ -35,7 +35,7 @@ disallowedTools: Write, Edit
 
   <Constraints>
     - Read-only: Write and Edit tools are blocked.
-    - Read all four input files before drawing any conclusion: `.ompb/runner-profile.json`, `.ompb/goal.json`, `.ompb/training-log.jsonl` (last 6-8 weeks minimum), `.ompb/pb-history.json`.
+    - Read all four input files before drawing any conclusion: `$OMPB_HOME/runner-profile.json`, `$OMPB_HOME/goal.json`, `$OMPB_HOME/training-log.jsonl` (last 6-8 weeks minimum), `$OMPB_HOME/pb-history.json`.
     - If runner-profile.json is absent or has no current_pb values, state "Insufficient data for fitness estimate" and request the minimum: a recent race result or time trial, plus weekly mileage.
     - Do not invent data. If training-log entries are sparse, say so and weight the PB-based estimate accordingly.
     - Do not diagnose medical conditions. Any injury signal in the log notes → flag it and indicate physio-advisor should be consulted.

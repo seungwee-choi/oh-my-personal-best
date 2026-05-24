@@ -30,7 +30,20 @@ Then:
 /plugin install oh-my-personal-best
 ```
 
-**Step 2: Tell it your goal**
+**Step 2: Run `/pb-setup`**
+
+After installing, run `/pb-setup` (optionally with a path to a COROS/Garmin export or CSV):
+
+```
+/pb-setup
+/pb-setup /path/to/coros-export.zip
+```
+
+`/pb-setup` resolves your data directory (OMPB_HOME, `~/.ompb` by default), checks dependencies, imports your existing activity data, and bootstraps your runner profile and PB history. It then runs an initial fitness diagnosis and builds your first analysis deck — so you start with a complete picture of where you are. Once setup is done, the daily loop is `/pb-today`, `/pb-log`, `/pb-deck`, and `/pb-plan`.
+
+---
+
+**Step 3: Tell it your goal**
 
 No setup forms. Just say what you want, in plain language:
 
@@ -41,7 +54,7 @@ No setup forms. Just say what you want, in plain language:
 
 If you're brand new, OMPB asks only for the minimum (a recent race or current PB, weekly mileage, goal, race date) before it builds anything.
 
-**Step 3: Run your week**
+**Step 4: Run your week**
 
 ```
 "what should I run today?"
@@ -63,6 +76,7 @@ You never have to use these — natural language is enough. But if you prefer ex
 
 | Command | Routes to | Effect |
 |---|---|---|
+| `/pb-setup [path]` | `pb-setup` skill | First-run onboarding: import data, bootstrap profile, initial deck |
 | `/pb-plan "sub-3:30 full in 16 weeks"` | `race-plan` skill | Build a full periodized training plan |
 | `/pb-today` | `session-coach` | Get today's session |
 | `/pb-log <path or text>` | `data-logger` | Log a run (.fit/.zip/CSV file, or plain language) |
@@ -108,7 +122,7 @@ Eight specialist agents organized across four lanes. You never pick an agent —
 | **Support** | `fuel-advisor` | Sonnet | Nutrition, carb-loading, race-day fueling schedule |
 | **Gate** | `plan-critic` | Opus | Physiological quality gate — no plan reaches you without its sign-off |
 
-### The Three Skills
+### The Four Skills
 
 Four end-to-end workflows cover the full training lifecycle:
 
@@ -139,7 +153,7 @@ Every path normalizes to the same `training-log.jsonl` schema. You never think a
 
 ## State
 
-Everything persists under `.ompb/`:
+Everything persists under OMPB_HOME (`~/.ompb` by default):
 
 | File | Contents |
 |---|---|

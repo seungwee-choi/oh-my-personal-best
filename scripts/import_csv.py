@@ -42,6 +42,8 @@ import csv
 import json
 import re
 import sys
+
+from ompb_env import resolve_home, log_path
 from datetime import datetime, timezone
 from typing import Dict, List, Optional
 
@@ -329,10 +331,17 @@ def main() -> None:
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
     parser.add_argument("file", help="Path to the CSV file to import")
+    parser.add_argument("--home", help="OMPB_HOME state dir (default: smart-resolve $OMPB_HOME -> ~/.ompb -> ./.ompb).")
+    parser.add_argument("--stdout", action="store_true", help="Write JSONL to stdout instead of appending to the home log.")
     args = parser.parse_args()
 
     logged_at = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+    home = resolve_home(args.home, create=True)
+    target = log_path(home)
+    sink = sys.stdout if args.stdout else open(target, "a", encoding="utf-8")
 
+    emitted = 0
+    skipped = 0
     try:
         with open(args.file, newline="", encoding="utf-8-sig") as fh:
             reader = csv.DictReader(fh)
@@ -340,12 +349,12 @@ def main() -> None:
                 print(json.dumps({"error": "CSV file has no header row"}), file=sys.stderr)
                 sys.exit(1)
             header = list(reader.fieldnames)
-            emitted = 0
-            skipped = 0
             for row in reader:
                 entry = process_row(row, header, logged_at)
                 if entry is not None:
-                    print(json.dumps(entry, ensure_ascii=False))
+                    line = json.dumps(entry, ensure_ascii=False)
+                    json.loads(line)  # integrity guard: never write a line that won't parse back
+                    sink.write(line + "\n")
                     emitted += 1
                 else:
                     skipped += 1
@@ -355,9 +364,13 @@ def main() -> None:
     except Exception as exc:  # noqa: BLE001
         print(json.dumps({"error": str(exc)}), file=sys.stderr)
         sys.exit(1)
+    finally:
+        if sink is not sys.stdout:
+            sink.close()
 
     print(
-        f"# import_csv.py: {emitted} activities emitted, {skipped} rows skipped (no date).",
+        f"# import_csv.py: {emitted} activities emitted, {skipped} rows skipped (no date)."
+        + ("" if args.stdout else f" appended to: {target}"),
         file=sys.stderr,
     )
 

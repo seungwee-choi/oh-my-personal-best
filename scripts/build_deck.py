@@ -36,6 +36,7 @@ import math
 import os
 import sys
 from collections import Counter, defaultdict
+from ompb_env import resolve_home, log_path
 from typing import Dict, List, Optional, Tuple
 
 # ---------------------------------------------------------------------------
@@ -508,7 +509,8 @@ def render_html(title: str, slides: List[Tuple[str, str]]) -> str:
 
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser(description="Render OMPB analysis as a self-contained HTML slide deck.")
-    ap.add_argument("--log", default=".ompb/training-log.jsonl")
+    ap.add_argument("--log", help="training-log.jsonl (default: <home>/training-log.jsonl)")
+    ap.add_argument("--home", help="OMPB_HOME state dir (default: smart-resolve $OMPB_HOME -> ~/.ompb -> ./.ompb).")
     ap.add_argument("--diagnosis")
     ap.add_argument("--goal")
     ap.add_argument("--pb")
@@ -518,10 +520,12 @@ def main(argv=None) -> int:
     ap.add_argument("--tz", help="(reserved) local timezone label")
     args = ap.parse_args(argv)
 
-    if not os.path.exists(args.log):
-        sys.stderr.write(f"error: log not found: {args.log}\n")
+    home = resolve_home(args.home)
+    log = args.log or log_path(home)
+    if not os.path.exists(log):
+        sys.stderr.write(f"error: log not found: {log}\n")
         return 2
-    logdir = os.path.dirname(os.path.abspath(args.log))
+    logdir = os.path.dirname(os.path.abspath(log))
 
     def discover(opt, name):
         if opt:
@@ -529,7 +533,7 @@ def main(argv=None) -> int:
         cand = os.path.join(logdir, name)
         return cand if os.path.exists(cand) else None
 
-    rows = load_log(args.log)
+    rows = load_log(log)
     if not rows:
         sys.stderr.write("error: log is empty.\n")
         return 2

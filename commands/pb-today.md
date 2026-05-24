@@ -9,11 +9,11 @@ description: "What should I run today?"
 Delegate to `oh-my-personal-best:session-coach` to prescribe today's session.
 
 Before prescribing, session-coach must load:
-- `.ompb/plan-state.json` — current phase, plan_week, this_week_target_km,
+- `$OMPB_HOME/plan-state.json` — current phase, plan_week, this_week_target_km,
   key_sessions, critic_approved
-- `.ompb/training-log.jsonl` — last 7 days of actuals for fatigue check
-- `.ompb/runner-profile.json` — experience, injury_history
-- `.ompb/goal.json` — event, target_time (for pace zone anchoring)
+- `$OMPB_HOME/training-log.jsonl` — last 7 days of actuals for fatigue check
+- `$OMPB_HOME/runner-profile.json` — experience, injury_history
+- `$OMPB_HOME/goal.json` — event, target_time (for pace zone anchoring)
 
 Pass any additional context from the runner as:
 

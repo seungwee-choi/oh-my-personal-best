@@ -13,9 +13,9 @@ description: "Render your training analysis as a self-contained HTML slide deck"
 $ARGUMENTS
 ```
 
-In short: ensure `.ompb/training-log.jsonl` has data, optionally have `race-analyst` write
-`.ompb/diagnosis.json`, then run `python3 scripts/build_deck.py --tz <local>` to produce
-`.ompb/decks/deck-<date>.html`, and offer to open it.
+In short: ensure `$OMPB_HOME/training-log.jsonl` has data, optionally have `race-analyst` write
+`$OMPB_HOME/diagnosis.json`, then run `python3 "$CLAUDE_PLUGIN_ROOT/scripts/build_deck.py" --tz <local>` to produce
+`$OMPB_HOME/decks/deck-<date>.html`, and offer to open it.
 
 If `skills/pb-deck/SKILL.md` is not readable from the working directory, locate it under the
 active `CLAUDE_PLUGIN_ROOT` / package root / installed plugin directory and continue.

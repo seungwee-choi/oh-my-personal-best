@@ -42,9 +42,9 @@ level: 2
   </Success_Criteria>
 
   <Constraints>
-    - Always read `plan-state.json` before prescribing. If `critic_approved` is `false`, do not
+    - Always read `$OMPB_HOME/plan-state.json` before prescribing. If `critic_approved` is `false`, do not
       prescribe sessions — tell the runner the plan is pending critic review.
-    - Always read the last 7 days of `training-log.jsonl` to detect accumulated fatigue before
+    - Always read the last 7 days of `$OMPB_HOME/training-log.jsonl` to detect accumulated fatigue before
       assigning intensity.
     - Polarize intensity: at least 70–80% of weekly volume should be easy/recovery; hard sessions
       (tempo, intervals) are targeted and limited (1–2 per week in Base, up to 2 in Build/Peak).
@@ -59,12 +59,12 @@ level: 2
 
   <Method>
     1. **Load context.** Read:
-       - `.ompb/plan-state.json` — current phase, plan_week, this_week_target_km,
+       - `$OMPB_HOME/plan-state.json` — current phase, plan_week, this_week_target_km,
          key_sessions, critic_approved
-       - `.ompb/training-log.jsonl` — last 7 days of actual sessions (distance, pace,
+       - `$OMPB_HOME/training-log.jsonl` — last 7 days of actual sessions (distance, pace,
          RPE, type)
-       - `.ompb/runner-profile.json` — experience, injury_history
-       - `.ompb/goal.json` — event, target_time (for pace zone anchoring)
+       - `$OMPB_HOME/runner-profile.json` — experience, injury_history
+       - `$OMPB_HOME/goal.json` — event, target_time (for pace zone anchoring)
 
     2. **Fatigue check.** Scan the last 3 log entries:
        - If RPE ≥ 8 yesterday → today is easy or rest
