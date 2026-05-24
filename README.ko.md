@@ -2,7 +2,8 @@
 
 # oh-my-personal-best
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](https://opensource.org/licenses/MIT)
+[![Release](https://img.shields.io/github/v/release/seungwee-choi/oh-my-personal-best?color=f97316)](https://github.com/seungwee-choi/oh-my-personal-best/releases)
+[![License: MIT](https://img.shields.io/github/license/seungwee-choi/oh-my-personal-best?color=green)](https://github.com/seungwee-choi/oh-my-personal-best/blob/main/LICENSE)
 [![Claude Code Plugin](https://img.shields.io/badge/Claude%20Code-Plugin-d97757)](https://docs.anthropic.com/claude-code)
 
 **마라톤 기록 단축(10K / Half / Full)을 위한 멀티 에이전트 오케스트레이션. 학습 곡선 제로.**

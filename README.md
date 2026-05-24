@@ -2,7 +2,8 @@ English | [한국어](README.ko.md)
 
 # oh-my-personal-best
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](https://opensource.org/licenses/MIT)
+[![Release](https://img.shields.io/github/v/release/seungwee-choi/oh-my-personal-best?color=f97316)](https://github.com/seungwee-choi/oh-my-personal-best/releases)
+[![License: MIT](https://img.shields.io/github/license/seungwee-choi/oh-my-personal-best?color=green)](https://github.com/seungwee-choi/oh-my-personal-best/blob/main/LICENSE)
 [![Claude Code Plugin](https://img.shields.io/badge/Claude%20Code-Plugin-d97757)](https://docs.anthropic.com/claude-code)
 
 **Multi-agent orchestration for marathon time improvement (10K / Half / Full). Zero learning curve.**
