@@ -42,6 +42,12 @@ Read paths import the script helpers in-process; write/render paths invoke the
 scripts as subprocesses (faithful to their CLI contract — dedup, integrity guards,
 summaries). Standard library only.
 
+**Install:** `pip install .` (or `pip install -e .[all]` for dev). The wheel is
+self-contained — `scripts/` and `templates/` are copied into the package at build
+time (see `setup.py`), so `ompb_core` works without the repo checkout. A separate
+end-user-surface repo can then depend on it (`pip install oh-my-personal-best`)
+rather than vendoring the toolkit.
+
 ---
 
 ## Surface 1 — MCP server (`servers/mcp_server.py`)

@@ -14,13 +14,25 @@ import sys
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
-# The deterministic toolkit lives in <repo>/scripts. Put it on the path so we can
-# import its pure helpers, and locate it for subprocess calls.
-REPO_ROOT = Path(__file__).resolve().parent.parent
-SCRIPTS = REPO_ROOT / "scripts"
+# The deterministic toolkit (scripts/ + templates/) lives at the repo root for the
+# Claude Code plugin, and is also copied into ompb_core/_bundled/ at build time
+# (see setup.py) so an installed wheel is self-contained. Resolve whichever exists —
+# repo root first, so a dev's edits to scripts/ are picked up over a stale bundle.
+def _toolkit_scripts() -> Path:
+    here = Path(__file__).resolve().parent
+    for cand in (here.parent / "scripts",        # repo root (editable / source checkout)
+                 here / "_bundled" / "scripts"):  # bundled into the wheel
+        if cand.is_dir():
+            return cand
+    return here.parent / "scripts"  # default; a clear ImportError follows if truly absent
+
+
+SCRIPTS = _toolkit_scripts()
 if str(SCRIPTS) not in sys.path:
     sys.path.insert(0, str(SCRIPTS))
 
+# Build scripts locate templates relative to their own file (../templates), so the
+# bundled copy keeps scripts/ and templates/ as siblings under _bundled/ — no extra wiring.
 import ompb_env  # noqa: E402  (resolved via SCRIPTS on sys.path)
 import build_report as _report  # noqa: E402
 
