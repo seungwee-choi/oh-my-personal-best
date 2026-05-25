@@ -107,9 +107,11 @@ This is the productization path: schedule it, wrap it in a service, or back a bo
 | Component | Status |
 |---|---|
 | `ompb_core` | ✅ verified live against the real 960-activity log (state/query/weekly/report_data + ko report render + error paths) |
-| `agents.py` parsing | ✅ verified — 8/8 agents parse with correct model + read-only gating (SDK-independent test) |
-| All new modules | ✅ syntax-compiled |
-| MCP server / Agent SDK app live run | ⏳ not run here — this box is offline + system Python is 3.9, while `mcp` and `claude-agent-sdk` need ≥3.10. Code is written against the verified current APIs; run with `pip install -e .[all]` on Python ≥3.10 + an API key. |
+| `agents.py` parsing | ✅ verified — 8/8 agents parse with correct model + read-only gating |
+| **MCP server** | ✅ **live** — driven over stdio by the MCP client SDK (Python 3.12): `initialize` + 8 tools + `ompb_coach` prompt listed; `get_state` / `weekly_load` / `query_log` returned real data; `build_week` rendered the ko card (26 KB) |
+| **Agent SDK app** | ✅ **live end-to-end** — `python -m apps.coach.app "…"` authenticated via the local `claude` CLI (Claude Code subscription, no API key needed), the orchestrator called `mcp__ompb__get_state`, and answered correctly **in Korean** (respecting `config.json` language) |
+
+Tested in a Python 3.12 venv: `python3.12 -m venv .venv && .venv/bin/pip install "mcp[cli]" claude-agent-sdk fitdecode`.
 
 ---
 
