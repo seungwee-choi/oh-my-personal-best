@@ -10,7 +10,13 @@
 
 _러닝을 공부하지 마세요. 그냥 목표 기록만 말하세요._
 
-[시작하기](#빠른-시작) • [동작 원리](#동작-원리) • [데이터 입력](#데이터-입력) • [상태](#상태) • [안전](#안전)
+[시작하기](#빠른-시작) • [실제 화면](#실제-화면) • [동작 원리](#동작-원리) • [왜 그냥-ai에-안-묻고](#왜-그냥-ai에-안-묻고) • [로드맵](#로드맵)
+
+<p align="center">
+  <img src="docs/assets/week-card.ko.png" alt="주간 훈련 계획 카드 — 페이스, 심박 존, 목적, 코치 노트" width="100%">
+  <br>
+  <em>당신의 한 주를 인쇄용 카드로 — 모든 세션의 페이스·심박 존·구성·목적·코치 노트까지. <code>/pb-week</code>로 생성합니다.</em>
+</p>
 
 ---
 
@@ -70,29 +76,21 @@ Claude Code 슬래시 커맨드입니다 — **한 줄씩** 입력하세요:
 
 ---
 
-## 세션 내 단축 명령
+## 실제 화면
 
-쓸 필요 없습니다 — 자연어만으로 충분합니다. 하지만 명시적 명령을 선호한다면 얇은 디스패처가 준비돼 있습니다:
+OMPB는 당신의 원시 활동 기록을 "지금 어디에 있고, 다음에 뭘 해야 하는지"에 대한 코치의 판독으로 바꿉니다.
 
-| 커맨드 | 라우팅 | 효과 |
-|---|---|---|
-| `/pb-setup [경로]` | `pb-setup` 스킬 | 첫 실행 온보딩: 데이터 임포트, 프로필 초기화, 초기 리포트 생성 |
-| `/pb-plan "16주 sub-3:30 풀코스"` | `race-plan` 스킬 | 완성된 주기화 훈련 계획 생성 |
-| `/pb-today` | `session-coach` | 오늘 세션 받기 |
-| `/pb-week` | `pb-week` 스킬 | 이번 주 훈련표를 시각적 카드로 보기 |
-| `/pb-log <경로 또는 텍스트>` | `data-logger` | 기록 입력 (.fit/.zip/CSV 파일, 또는 자연어) |
-| `/pb-report` | `pb-report` 스킬 | 인쇄·PDF용 종합 훈련 리포트 생성 |
-| `/pb-connect-strava` | `pb-connect-strava` 스킬 | Strava 연동 (최초 1회) 및 활동 동기화 |
+**당신의 데이터로 만든 완전한 훈련 분석** — `/pb-report`
 
-| 이렇게 말하면 (예시) | 라우팅 |
-|---|---|
-| "풀코스 sub-3:30" / "훈련 계획" / 목표 기록 | `race-plan` (진단 → 주기화 → 게이트 → 전달) |
-| "오늘 뭐 뛰어?" | `session-coach` |
-| "무릎이 아픈데 롱런 해도 돼?" | `physio-advisor` (안전 게이트 우선) |
-| "레이스 3일 전인데 뭐 먹어?" | `fuel-advisor` + `pace-strategist` |
-| "지난주 기록 어땠어?" / "12km 이지 뛰었어" | `data-logger` |
-| "이번 주 계획 조정해줘" | `weekly-adapt` |
-| "다음 주가 대회야" / "테이퍼" | `race-week` (병렬 협의) |
+<p align="center"><img src="docs/assets/report-overview.ko.png" alt="훈련 분석 리포트 — 핵심 요약, 개인 기록, 1순위 제한 요인" width="92%"></p>
+
+**전체** 로그를 읽고(여기선 96주에 걸친 960개 활동 / 4,506km), 체력을 추정하며, 당신의 **1순위 제한 요인**을 짚어냅니다 — 일반론이 아니라, *당신을* 붙잡고 있는 바로 그것.
+
+<p align="center"><img src="docs/assets/report-analysis.ko.png" alt="월간 볼륨, 페이스-심박 추이, 유산소 효율 플롯" width="92%"></p>
+
+볼륨 주기화, 페이스 대비 심박 드리프트, 그리고 정체 구간을 *눈에 보이게* 만드는 유산소 효율 플롯 — 모두 인라인 SVG, 완전 self-contained, 인쇄·PDF 준비 완료.
+
+> 스크린샷은 실제 23개월 훈련 기록을 사용했습니다(익명화).
 
 ---
 
@@ -103,7 +101,24 @@ Claude Code 슬래시 커맨드입니다 — **한 줄씩** 입력하세요:
 - **모델 라우팅** — 진단·설계·게이트는 Opus, 세션 처방은 Sonnet, 로깅은 Haiku. 중요한 곳엔 품질, 그 외엔 저비용.
 - **Self-approve 금지** — 모든 계획은 별도의 생리학적 안전 게이트를 통과한 뒤에야 노출됩니다.
 - **안전 우선** — 통증 신호는 계획을 무시하고 우선합니다. 코치이지, 의사가 아닙니다.
-- **데이터 통합** — CSV 업로드와 자연어 보고가 하나의 훈련 로그로 정규화됩니다.
+- **데이터 통합** — `.fit` 파일, CSV 업로드, Strava 동기화, 자연어 보고가 하나의 훈련 로그로 정규화됩니다.
+
+---
+
+## 왜 그냥 AI에 안 묻고?
+
+매주 데이터를 챗봇에 붙여넣을 수도 있습니다. 하지만 목적에 맞게 설계된 코칭 시스템은 빈 채팅창 — 또는 워치 앱 — 이 못 하는 일을 합니다:
+
+| | 일반 AI 채팅 | 워치 앱 (Garmin/COROS/…) | **oh-my-personal-best** |
+|---|:---:|:---:|:---:|
+| **전체** 훈련 기록을 읽음 | ✗ 매번 다시 붙여넣기 | ◑ 데이터는 보여주나 일반 계획 | ✅ 전체 로그를 읽음 |
+| **당신의** 제한 요인 진단 | ◑ 일반적 조언 | ✗ | ✅ `race-analyst` |
+| **모든 계획 전** 안전 게이트 | ✗ | ✗ | ✅ `plan-critic` |
+| 아플 때 멈춰 세움 | ◑ 일관성 없음 | ✗ | ✅ `physio-advisor` 우선 |
+| **실제 뛴 것**에 맞춰 매주 적응 | ✗ 수동 | ◑ 경직된 템플릿 | ✅ `weekly-adapt` |
+| 데이터가 있는 곳 | 그들의 서버 | 기기 종속 | ✅ 로컬, 당신의 Claude Code 안 |
+
+게이트 레인이 차이입니다: 위험한 볼륨 증가나 부족한 테이퍼가 담긴 계획은 **절대 당신에게 도달하지 않습니다.** Self-approve 없음.
 
 ---
 
@@ -134,9 +149,33 @@ Claude Code 슬래시 커맨드입니다 — **한 줄씩** 입력하세요:
 | `weekly-adapt` | 주간 적응 루프: 실제 로그 → 피로 평가 → 다음 주 조정 → 게이트 |
 | `race-week` | 레이스 직전 병렬 협의: 페이스 + 연료 + 피지오 동시 → 하나의 레이스데이 브리프 |
 | `pb-week` | 이번 주 플랜을 시각적·인쇄용 카드로 (일간 `/pb-today`·블록 `/pb-plan`의 주간 짝) |
-| `pb-report` | 분석 → 인쇄·PDF용 종합 리포트 문서 (인라인 SVG 차트, self-contained, 인쇄·PDF 준비) |
+| `pb-report` | 분석 → 인쇄·PDF용 종합 리포트 문서 (인라인 SVG 차트, self-contained) |
 
-게이트 레인이 일반 AI 어시스턴트와의 핵심 차이입니다: **`plan-critic`이 모든 계획을 당신이 보기 전에 검토합니다.** Self-approve 없음. 위험한 적재량 증가나 부족한 테이퍼가 담긴 계획은 절대 당신에게 도달하지 않습니다.
+---
+
+## 세션 내 단축 명령
+
+쓸 필요 없습니다 — 자연어만으로 충분합니다. 하지만 명시적 명령을 선호한다면 얇은 디스패처가 준비돼 있습니다:
+
+| 커맨드 | 라우팅 | 효과 |
+|---|---|---|
+| `/pb-setup [경로]` | `pb-setup` 스킬 | 첫 실행 온보딩: 데이터 임포트, 프로필 초기화, 초기 리포트 생성 |
+| `/pb-plan "16주 sub-3:30 풀코스"` | `race-plan` 스킬 | 완성된 주기화 훈련 계획 생성 |
+| `/pb-today` | `session-coach` | 오늘 세션 받기 |
+| `/pb-week` | `pb-week` 스킬 | 이번 주 훈련표를 시각적 카드로 보기 |
+| `/pb-log <경로 또는 텍스트>` | `data-logger` | 기록 입력 (.fit/.zip/CSV 파일, 또는 자연어) |
+| `/pb-report` | `pb-report` 스킬 | 인쇄·PDF용 종합 훈련 리포트 생성 |
+| `/pb-connect-strava` | `pb-connect-strava` 스킬 | Strava 연동 (최초 1회) 및 활동 동기화 |
+
+| 이렇게 말하면 (예시) | 라우팅 |
+|---|---|
+| "풀코스 sub-3:30" / "훈련 계획" / 목표 기록 | `race-plan` (진단 → 주기화 → 게이트 → 전달) |
+| "오늘 뭐 뛰어?" | `session-coach` |
+| "무릎이 아픈데 롱런 해도 돼?" | `physio-advisor` (안전 게이트 우선) |
+| "레이스 3일 전인데 뭐 먹어?" | `fuel-advisor` + `pace-strategist` |
+| "지난주 기록 어땠어?" / "12km 이지 뛰었어" | `data-logger` |
+| "이번 주 계획 조정해줘" | `weekly-adapt` |
+| "다음 주가 대회야" / "테이퍼" | `race-week` (병렬 협의) |
 
 ---
 
@@ -186,11 +225,49 @@ OMPB가 하지 않는 것: 의학적 진단·치료, 엘리트 선수를 위한 
 
 ---
 
+## 로드맵
+
+**현재 제공**
+- ✅ 임포트: `.fit`(COROS/Garmin), CSV, 자연어, Strava 동기화(토큰 자동 갱신)
+- ✅ 체력 진단, 주기화 계획(Base → Build → Peak → Taper) + 필수 안전 게이트
+- ✅ 주간 적응, 레이스위크 브리프, 인쇄·PDF 리포트, 주간 플랜 카드
+- ✅ 영어 / 한국어 (`config.json` `language`)
+
+**예정**
+- ⏳ Garmin / COROS 직접 연동 (현재는 Strava 브리지를 거쳐 들어옴)
+- ⏳ 단위 토글(km / mi) 및 타임존 (`config.json`)
+- ⏳ 멀티 레이스 시즌 계획
+- ⏳ 추가 언어
+
+요청이 있으신가요? [이슈를 남겨주세요](https://github.com/seungwee-choi/oh-my-personal-best/issues).
+
+---
+
 ## 요구사항
 
 - [Claude Code](https://docs.anthropic.com/claude-code) CLI
 - Claude Max/Pro 구독 또는 Anthropic API 키
-- `scripts/import_csv.py`용 Python 3 (stdlib만 사용)
+- Python 3 (표준 라이브러리) — `.fit` 임포트에만 `fitdecode` 필요 (`pip install -r requirements.txt`)
+
+---
+
+## 기여
+
+이슈와 PR을 환영합니다.
+
+- 🐛 **버그를 찾았거나 아이디어가 있나요?** [이슈를 남겨주세요](https://github.com/seungwee-choi/oh-my-personal-best/issues).
+- 🔧 **직접 손대보고 싶다면?** 이 플러그인은 순수 Markdown(에이전트 + 스킬)과 표준 라이브러리 Python(`scripts/`)으로 되어 있습니다. 의존성이 필요한 건 `.fit` 임포트뿐입니다(`pip install -r requirements.txt`).
+- 📐 상태 스키마는 [`docs/STATE-SCHEMA.md`](docs/STATE-SCHEMA.md), 자연어 라우팅은 [`CLAUDE.md`](CLAUDE.md)에 있습니다.
+
+OMPB가 당신의 훈련에 도움이 됐다면, ⭐ 하나가 다른 러너들이 이걸 찾는 데 도움이 됩니다.
+
+---
+
+## Star History
+
+<a href="https://star-history.com/#seungwee-choi/oh-my-personal-best&Date">
+  <img src="https://api.star-history.com/svg?repos=seungwee-choi/oh-my-personal-best&type=Date" alt="Star History Chart" width="600">
+</a>
 
 ---
 
