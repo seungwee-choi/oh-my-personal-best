@@ -227,6 +227,18 @@ OMPB does not: provide medical diagnosis or treatment, replace a certified coach
 
 ---
 
+## Beyond Claude Code
+
+The coaching toolkit isn't locked to the Claude Code plugin. The deterministic core — data import, Strava sync, the self-contained HTML report/week renderers — has **zero AI-platform coupling**, so the same brain runs on other surfaces:
+
+- **`ompb_core`** — a standard-library Python facade over the toolkit (state, log queries, weekly load, report/week rendering). The shared base for everything below.
+- **MCP server** (`servers/mcp_server.py`) — exposes the toolkit as Model Context Protocol tools, usable from any MCP host: Claude Desktop, Cursor, Cline, VS Code, …
+- **Standalone Agent SDK app** (`apps/coach/`) — the full coach (natural-language routing + the eight specialists + the plan-critic safety gate) as a plain CLI you can run, schedule, or wrap in a service — no Claude Code required.
+
+Setup and the architecture write-up are in **[`docs/PLATFORMS.md`](docs/PLATFORMS.md)** (`pip install -e .[all]`, Python ≥ 3.10).
+
+---
+
 ## Roadmap
 
 **Shipping now**

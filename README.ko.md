@@ -227,6 +227,18 @@ OMPB가 하지 않는 것: 의학적 진단·치료, 엘리트 선수를 위한 
 
 ---
 
+## Claude Code를 넘어서
+
+코칭 툴킷은 Claude Code 플러그인에 묶여 있지 않습니다. 결정적 코어 — 데이터 임포트, Strava 동기화, self-contained HTML 리포트/주간카드 렌더러 — 는 **AI 플랫폼 의존성이 0**이라, 같은 두뇌가 다른 표면에서도 돌아갑니다:
+
+- **`ompb_core`** — 툴킷 위의 표준 라이브러리 Python 파사드(상태, 로그 조회, 주간 부하, 리포트/주간 렌더). 아래 모든 것의 공유 기반.
+- **MCP 서버** (`servers/mcp_server.py`) — 툴킷을 Model Context Protocol 도구로 노출 → 모든 MCP 호스트에서 사용: Claude Desktop, Cursor, Cline, VS Code, …
+- **독립 Agent SDK 앱** (`apps/coach/`) — 코치 전체(자연어 라우팅 + 8명의 전문가 + plan-critic 안전 게이트)를 평범한 CLI로. 실행·스케줄·서비스 래핑 가능, Claude Code 불필요.
+
+설치법과 아키텍처 설명은 **[`docs/PLATFORMS.md`](docs/PLATFORMS.md)** 에 있습니다 (`pip install -e .[all]`, Python ≥ 3.10).
+
+---
+
 ## 로드맵
 
 **현재 제공**
