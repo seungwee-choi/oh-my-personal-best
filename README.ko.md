@@ -81,6 +81,7 @@ Claude Code 슬래시 커맨드입니다 — **한 줄씩** 입력하세요:
 | `/pb-today` | `session-coach` | 오늘 세션 받기 |
 | `/pb-log <경로 또는 텍스트>` | `data-logger` | 기록 입력 (.fit/.zip/CSV 파일, 또는 자연어) |
 | `/pb-deck` | `pb-deck` 스킬 | 분석을 self-contained HTML 슬라이드 덱으로 렌더 |
+| `/pb-connect-strava` | `pb-connect-strava` 스킬 | Strava 연동 (최초 1회) 및 활동 동기화 |
 
 | 이렇게 말하면 (예시) | 라우팅 |
 |---|---|
@@ -141,13 +142,14 @@ Claude Code 슬래시 커맨드입니다 — **한 줄씩** 입력하세요:
 
 모든 경로가 동일한 `training-log.jsonl` 스키마로 정규화됩니다. 어떤 경로인지 신경 쓸 필요 없습니다 — `data-logger`가 라우팅을 처리합니다.
 
-**Phase 1 (현재)**
+**현재 사용 가능**
 - **기기 파일 (`.fit`)** — COROS / Garmin export 폴더·개별 파일·`.zip`을 `scripts/import_fit.py`로 파싱. 러닝은 거리로 easy/long 분류, 그 외 종목(사이클·수영 등)은 `cross`로 적재해 총 훈련 부하를 포착. 재임포트는 활동 ID로 중복 제거. `fitdecode` 필요 (`requirements.txt` 참고).
 - **CSV 업로드** — Strava 활동 export를 `scripts/import_csv.py`로 파싱 (표준 라이브러리만 사용)
 - **자연어** — "12km 이지로 5:30에 뛰었어" → 파싱 후 적재
+- **Strava API** — `/pb-connect-strava`로 최초 1회 연동 (본인 Strava 앱 + localhost OAuth); `import_strava.py`가 액세스 토큰을 자동 갱신하고 모든 활동을 동기화합니다. 인증 정보는 `~/.ompb/strava.json`에 저장됩니다 (chmod 600, 절대 커밋하지 마세요).
 
-**Phase 2 (추후)**
-- **API 연동** — Strava / Garmin / Coros OAuth (인터페이스 정의 완료, 구현 예정). 분석 에이전트는 입력 출처와 분리되어 있어 원시 API가 아닌 통합 로그를 읽습니다.
+**추후 추가 예정**
+- **Garmin / Coros API 연동** — 다른 플랫폼의 OAuth 연동 (인터페이스 정의 완료, 구현 예정). 분석 에이전트는 입력 출처와 분리되어 있어 원시 API가 아닌 통합 로그를 읽습니다.
 
 ---
 

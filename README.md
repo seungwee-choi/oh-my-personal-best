@@ -81,6 +81,7 @@ You never have to use these — natural language is enough. But if you prefer ex
 | `/pb-today` | `session-coach` | Get today's session |
 | `/pb-log <path or text>` | `data-logger` | Log a run (.fit/.zip/CSV file, or plain language) |
 | `/pb-deck` | `pb-deck` skill | Render your analysis as a self-contained HTML slide deck |
+| `/pb-connect-strava` | `pb-connect-strava` skill | Connect Strava (one-time) and sync activities |
 
 | You say (examples) | Routes to |
 |---|---|
@@ -141,13 +142,14 @@ The gate lane is the key difference from a generic AI assistant: **`plan-critic`
 
 Every path normalizes to the same `training-log.jsonl` schema. You never think about which one — `data-logger` handles routing.
 
-**Phase 1 (now)**
+**Available now**
 - **Device files (`.fit`)** — COROS / Garmin export folders, individual files, or `.zip` archives via `scripts/import_fit.py`. Running is typed easy/long by distance; other sports (cycling, swimming, …) are recorded as `cross` so total training load is captured. Re-imports are de-duplicated by activity id. Needs `fitdecode` (see `requirements.txt`).
 - **CSV upload** — Strava activity exports via `scripts/import_csv.py` (standard library only)
 - **Natural language** — "ran 12k easy at 5:30" → parsed and appended
+- **Strava API** — connect once with `/pb-connect-strava` (your own Strava app + OAuth via localhost); `import_strava.py` auto-refreshes the access token and syncs all activities. Credentials stored in `~/.ompb/strava.json` (chmod 600, never committed).
 
-**Phase 2 (later)**
-- **API sync** — Strava / Garmin / Coros OAuth (interface defined, implementation coming). Analysis agents are decoupled from the input source — they read the unified log, not the raw API.
+**Coming later**
+- **Garmin / Coros API sync** — OAuth for other platforms (interface defined, implementation coming). Analysis agents are decoupled from the input source — they read the unified log, not the raw API.
 
 ---
 

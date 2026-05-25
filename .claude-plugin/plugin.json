@@ -17,6 +17,7 @@
   ],
   "skills": [
     "./skills/pb-setup/",
+    "./skills/pb-connect-strava/",
     "./skills/race-plan/",
     "./skills/weekly-adapt/",
     "./skills/race-week/",

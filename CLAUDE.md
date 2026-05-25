@@ -64,8 +64,9 @@ Route by intent. Trivial lookups → answer directly or via `data-logger` (haiku
 | "이번 주 계획 조정해줘" / weekly check-in | `weekly-adapt` skill |
 | "다음 주가 대회야" / race is next week | `race-week` skill (parallel consult) |
 | "내 데이터 보여줘" / "make a report" / "시각자료로" | `pb-deck` skill (HTML deck of analysis) |
+| "connect strava" / "스트라바 연동" / "sync strava" | `pb-connect-strava` skill |
 
-Keyword triggers (auto-detect): `"setup" / "처음" / "시작하기" / "get started"` or first run with empty OMPB_HOME → `pb-setup`; `"race plan" / "훈련 계획" / "sub-N" / goal time` → `race-plan`; `"weekly" / "이번 주" / "adjust"` → `weekly-adapt`; `"race week" / "대회 D-7" / "taper"` → `race-week`; `"deck" / "report" / "시각자료" / "슬라이드" / "visualize"` → `pb-deck`.
+Keyword triggers (auto-detect): `"setup" / "처음" / "시작하기" / "get started"` or first run with empty OMPB_HOME → `pb-setup`; `"race plan" / "훈련 계획" / "sub-N" / goal time` → `race-plan`; `"weekly" / "이번 주" / "adjust"` → `weekly-adapt`; `"race week" / "대회 D-7" / "taper"` → `race-week`; `"deck" / "report" / "시각자료" / "슬라이드" / "visualize"` → `pb-deck`; `"strava" / "스트라바"` → `pb-connect-strava`.
 </routing>
 
 <skills>
@@ -75,8 +76,9 @@ End-to-end workflows covering the full training lifecycle:
 - `weekly-adapt` — **weekly adaptation loop**: `data-logger` (collect actuals) → `race-analyst` (compliance/fatigue) → `plan-architect` (adjust next week) → `plan-critic` (gate).
 - `race-week` — **parallel race-week consult**: `pace-strategist` + `fuel-advisor` + `physio-advisor` in parallel, then synthesize a race-day brief.
 - `pb-deck` — **analysis → visual deck**: `race-analyst` writes `diagnosis.json`, then `scripts/build_deck.py` renders a single self-contained HTML slide deck (inline SVG charts) to `$OMPB_HOME/decks/`.
+- `pb-connect-strava` — connect a Strava account (user's own app + refresh token, OAuth via localhost) and sync activities; auto-refreshes.
 
-Commands are thin dispatchers: `/pb-setup` → pb-setup, `/pb-plan` → race-plan, `/pb-today` → session-coach, `/pb-log` → data-logger, `/pb-deck` → pb-deck.
+Commands are thin dispatchers: `/pb-setup` → pb-setup, `/pb-plan` → race-plan, `/pb-today` → session-coach, `/pb-log` → data-logger, `/pb-deck` → pb-deck, `/pb-connect-strava` → pb-connect-strava.
 </skills>
 
 <data_ingest>
@@ -84,7 +86,8 @@ Input paths normalize to the same `training-log` schema (`data-logger` owns this
 1. **Device files (.fit/.zip) — primary.** COROS/Garmin exports via `import_fit.py` (running → easy/long, other sports → cross; deduped by `source_id`). Needs `fitdecode`.
 2. **CSV upload.** Strava-style exports via `import_csv.py` (stdlib only).
 3. **Natural language — always on.** "오늘 10K 50분 뛰었어" → `data-logger` parses, validates, and appends.
-4. **API sync — Phase 2 (later).** Strava/Garmin/Coros OAuth; interface abstracted now.
+4. **Strava API.** `pb-connect-strava` (one-time OAuth with the runner's own app) → `import_strava.py` auto-refreshes the 6-hour access token and syncs. Credentials stored in `$OMPB_HOME/strava.json` (chmod 600).
+5. **API sync — Phase 2 (later).** Garmin / Coros OAuth (interface abstracted; not yet implemented).
 Importers append to `$OMPB_HOME/training-log.jsonl` directly (validated, deduped). Analysis agents never branch on input source — they read the unified log.
 </data_ingest>
 

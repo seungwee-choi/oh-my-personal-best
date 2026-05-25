@@ -79,6 +79,26 @@ shapes. Times are stored as `HH:MM:SS` or `MM:SS` strings; paces as `MM:SS` per 
 }
 ```
 
+## `strava.json` (Strava credentials — secrets, never commit)
+Written by `scripts/strava_connect.py` after the one-time OAuth flow; read and updated (access token refresh) by `scripts/import_strava.py`. File permissions are set to 600 by the connect script.
+
+```json
+{
+  "client_id": "string",
+  "client_secret": "string",
+  "refresh_token": "string",
+  "access_token": "string",
+  "expires_at": 0,
+  "athlete_id": 0,
+  "connected_at": "ISO-8601"
+}
+```
+
+- `access_token` / `expires_at`: the short-lived (6-hour) bearer token; `import_strava.py` refreshes it automatically before each sync.
+- `athlete_id`: the Strava athlete id, used for logging/debugging only.
+- **This file contains secrets. It is gitignored with the rest of `$OMPB_HOME`. Never commit it.**
+- Training-log entries imported from Strava carry `source: "strava"` and `source_id: "strava-<activityId>"` for deduplication.
+
 ## `decks/` (generated artifacts)
 `scripts/build_deck.py` writes self-contained HTML slide decks to `$OMPB_HOME/decks/deck-<YYYY-MM-DD>.html`.
 These are derived outputs (regenerable from the log + JSON state); they are gitignored with the rest of `$OMPB_HOME`.

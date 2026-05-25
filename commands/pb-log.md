@@ -27,6 +27,14 @@ $ARGUMENTS
 - The script validates, dedupes, and appends normalized lines directly to
   `$OMPB_HOME/training-log.jsonl` with `source: "csv"`
 
+**If `$ARGUMENTS` is `strava` or `sync strava`**:
+- Requires a prior `/pb-connect-strava` (credentials in `$OMPB_HOME/strava.json`)
+- data-logger calls `python3 "$CLAUDE_PLUGIN_ROOT/scripts/import_strava.py"`
+- The script auto-refreshes the access token, pages `/athlete/activities`, normalizes
+  (running → easy/long, other sports → cross), and appends deduped lines to
+  `$OMPB_HOME/training-log.jsonl` with `source: "strava"` and `source_id: "strava-<id>"`
+- If `strava.json` is missing, tell the runner to run `/pb-connect-strava` first
+
 **If `$ARGUMENTS` is a natural-language report** (e.g., "ran 10K in 50:00", "오늘 12km
 easy 5:45 뛰었어", "long run 32km done, HR avg 148"):
 - data-logger parses the report directly: extract date, type, distance_km, pace, HR, RPE,

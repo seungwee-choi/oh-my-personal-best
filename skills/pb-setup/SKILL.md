@@ -57,6 +57,8 @@ Ask what the runner has (or use `$ARGUMENTS` if a path was given):
 - **COROS / Garmin export** (folder, `.fit`, or `.zip`):
   `python3 "$CLAUDE_PLUGIN_ROOT/scripts/import_fit.py" "<path>" --tz <local-tz>`
 - **CSV export** (Strava etc.): `python3 "$CLAUDE_PLUGIN_ROOT/scripts/import_csv.py" "<file.csv>"`
+- **Strava account:** run `/pb-connect-strava` (one-time app + OAuth), then
+  `python3 "$CLAUDE_PLUGIN_ROOT/scripts/import_strava.py"` syncs all activities.
 - **Nothing yet / log manually**: skip import; they can `/pb-log "ran 10K in 50:00"` later.
 The importers append to `<home>/training-log.jsonl` (validated, deduped by `source_id`). Report the
 summary (activities imported, by sport).
