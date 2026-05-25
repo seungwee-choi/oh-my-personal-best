@@ -38,6 +38,7 @@ except ModuleNotFoundError:
     sys.stderr.write("error: Agent SDK not installed. Run: pip install claude-agent-sdk\n")
     raise
 
+from apps.coach._assets import claude_md as _claude_md_path
 from apps.coach.agents import load_agents
 from apps.coach.tools import ALLOWED_TOOL_NAMES, SERVER_NAME, make_server
 
@@ -60,7 +61,7 @@ RUNTIME: You are running as a standalone Claude Agent SDK app, NOT inside Claude
 
 
 def build_options() -> ClaudeAgentOptions:
-    claude_md = (REPO_ROOT / "CLAUDE.md").read_text(encoding="utf-8")
+    claude_md = _claude_md_path().read_text(encoding="utf-8")
     return ClaudeAgentOptions(
         system_prompt=claude_md + SDK_APPENDIX,
         model="opus",  # the orchestrator; subagents carry their own model from agents/*.md
@@ -68,7 +69,7 @@ def build_options() -> ClaudeAgentOptions:
         mcp_servers={SERVER_NAME: make_server()},
         allowed_tools=[*ALLOWED_TOOL_NAMES, "Task", "Read"],
         permission_mode="acceptEdits",
-        cwd=str(REPO_ROOT),
+        cwd=os.getcwd(),  # the caller's dir (no repo checkout required when installed)
         setting_sources=None,  # don't inherit host CLAUDE.md/settings; this app is self-contained
     )
 

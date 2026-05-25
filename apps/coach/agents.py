@@ -14,8 +14,9 @@ from typing import Dict, Tuple
 
 from claude_agent_sdk import AgentDefinition
 
-REPO_ROOT = Path(__file__).resolve().parents[2]
-AGENTS_DIR = REPO_ROOT / "agents"
+from apps.coach._assets import agents_dir as _agents_dir
+
+AGENTS_DIR = _agents_dir()  # repo agents/ (dev) or the bundled copy (wheel)
 
 
 def _parse(path: Path) -> Tuple[Dict[str, str], str]:
