@@ -148,8 +148,8 @@ Claude Code 슬래시 커맨드입니다 — **한 줄씩** 입력하세요:
 - **자연어** — "12km 이지로 5:30에 뛰었어" → 파싱 후 적재
 - **Strava API** — `/pb-connect-strava`로 최초 1회 연동 (본인 Strava 앱 + localhost OAuth); `import_strava.py`가 액세스 토큰을 자동 갱신하고 모든 활동을 동기화합니다. 인증 정보는 `~/.ompb/strava.json`에 저장됩니다 (chmod 600, 절대 커밋하지 마세요).
 
-**추후 추가 예정**
-- **Garmin / Coros API 연동** — 다른 플랫폼의 OAuth 연동 (인터페이스 정의 완료, 구현 예정). 분석 에이전트는 입력 출처와 분리되어 있어 원시 API가 아닌 통합 로그를 읽습니다.
+**Garmin / COROS**
+- 이들은 **개인용 API가 없습니다** — Garmin·COROS 개발자 프로그램은 기업/파트너 전용이라 개인이 per-user OAuth를 쓸 수 없습니다. 대신 위의 두 경로를 쓰세요: `.fit`을 export 해서 `/pb-log` 하거나, **워치의 Strava 자동 연동**(Garmin/COROS 앱에서 토글 하나)을 켠 뒤 `/pb-connect-strava` 실행 — Garmin/COROS 활동이 Strava를 거쳐 들어옵니다. 분석 에이전트는 통합 로그만 읽으므로 출처는 무관합니다.
 
 ---
 

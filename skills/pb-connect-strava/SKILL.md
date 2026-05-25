@@ -17,6 +17,7 @@ and stores a refresh-token credential that `import_strava.py` auto-refreshes fro
 <Use_When>
 - The runner wants to import from Strava, or says "connect strava", "스트라바 연동", "sync strava"
 - During `/pb-setup` when the runner picks Strava as their data source
+- A **Garmin or COROS** user who wants auto-sync: those platforms have no individual API (business/partner-only), but both watches can auto-sync to Strava with one toggle in their app — so connecting Strava here pulls their Garmin/COROS activities too. (Prefer this over the gated/undocumented Garmin/COROS APIs.)
 </Use_When>
 
 <Do_Not_Use_When>

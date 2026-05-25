@@ -148,8 +148,8 @@ Every path normalizes to the same `training-log.jsonl` schema. You never think a
 - **Natural language** — "ran 12k easy at 5:30" → parsed and appended
 - **Strava API** — connect once with `/pb-connect-strava` (your own Strava app + OAuth via localhost); `import_strava.py` auto-refreshes the access token and syncs all activities. Credentials stored in `~/.ompb/strava.json` (chmod 600, never committed).
 
-**Coming later**
-- **Garmin / Coros API sync** — OAuth for other platforms (interface defined, implementation coming). Analysis agents are decoupled from the input source — they read the unified log, not the raw API.
+**Garmin / COROS**
+- There's **no individual API** for these — Garmin's and COROS's developer programs are business/partner-only (no self-serve per-user OAuth). Use either path above instead: export `.fit` and `/pb-log` it, **or** enable your watch's **Strava auto-sync** (one toggle in the Garmin/COROS app) and run `/pb-connect-strava` — your Garmin/COROS activities then flow in through Strava. Analysis agents read the unified log, so the source doesn't matter.
 
 ---
 
