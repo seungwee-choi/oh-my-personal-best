@@ -1,5 +1,5 @@
 ---
-description: "First-run setup — import your data, build your profile, get your first analysis deck"
+description: "First-run setup — import your data, build your profile, get your first analysis report"
 ---
 
 # pb-setup
@@ -15,8 +15,8 @@ $ARGUMENTS
 
 In short: resolve `$CLAUDE_PLUGIN_ROOT` (scripts) and `OMPB_HOME` (data), check `fitdecode`,
 import the runner's data, bootstrap `runner-profile.json` (+ `pb-history.json`) from it, optionally
-set a goal, then run `race-analyst` + `build_deck.py` to deliver the first deck — and show the
-core loop (`/pb-today`, `/pb-log`, `/pb-deck`, `/pb-plan`).
+set a goal, then run `race-analyst` + `build_report.py` to deliver the first report — and show the
+core loop (`/pb-today`, `/pb-log`, `/pb-report`, `/pb-plan`).
 
 If `skills/pb-setup/SKILL.md` is not readable from the working directory, locate it under the
 active `CLAUDE_PLUGIN_ROOT` / package root / installed plugin directory and continue.

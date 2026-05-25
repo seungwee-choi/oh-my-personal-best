@@ -39,7 +39,7 @@ Claude Code 슬래시 커맨드입니다 — **한 줄씩** 입력하세요:
 /pb-setup /path/to/coros-export.zip
 ```
 
-`/pb-setup`은 데이터 디렉토리(OMPB_HOME, 기본값 `~/.ompb`)를 확인하고, 의존성을 점검하며, 기존 활동 데이터를 임포트해 러너 프로필과 PB 이력을 초기화합니다. 이어서 초기 체력 진단을 실행하고 첫 번째 분석 덱을 만들어 줍니다 — 지금 상태를 한눈에 파악하고 시작할 수 있습니다. 셋업이 완료되면 일상 루프는 `/pb-today`, `/pb-log`, `/pb-deck`, `/pb-plan`입니다.
+`/pb-setup`은 데이터 디렉토리(OMPB_HOME, 기본값 `~/.ompb`)를 확인하고, 의존성을 점검하며, 기존 활동 데이터를 임포트해 러너 프로필과 PB 이력을 초기화합니다. 이어서 초기 체력 진단을 실행하고 첫 번째 분석 리포트를 만들어 줍니다 — 지금 상태를 한눈에 파악하고 시작할 수 있습니다. 셋업이 완료되면 일상 루프는 `/pb-today`, `/pb-log`, `/pb-report`, `/pb-plan`입니다.
 
 ---
 
@@ -76,12 +76,11 @@ Claude Code 슬래시 커맨드입니다 — **한 줄씩** 입력하세요:
 
 | 커맨드 | 라우팅 | 효과 |
 |---|---|---|
-| `/pb-setup [경로]` | `pb-setup` 스킬 | 첫 실행 온보딩: 데이터 임포트, 프로필 초기화, 초기 덱 생성 |
+| `/pb-setup [경로]` | `pb-setup` 스킬 | 첫 실행 온보딩: 데이터 임포트, 프로필 초기화, 초기 리포트 생성 |
 | `/pb-plan "16주 sub-3:30 풀코스"` | `race-plan` 스킬 | 완성된 주기화 훈련 계획 생성 |
 | `/pb-today` | `session-coach` | 오늘 세션 받기 |
 | `/pb-week` | `pb-week` 스킬 | 이번 주 훈련표를 시각적 카드로 보기 |
 | `/pb-log <경로 또는 텍스트>` | `data-logger` | 기록 입력 (.fit/.zip/CSV 파일, 또는 자연어) |
-| `/pb-deck` | `pb-deck` 스킬 | 분석을 self-contained HTML 슬라이드 덱으로 렌더 |
 | `/pb-report` | `pb-report` 스킬 | 인쇄·PDF용 종합 훈련 리포트 생성 |
 | `/pb-connect-strava` | `pb-connect-strava` 스킬 | Strava 연동 (최초 1회) 및 활동 동기화 |
 
@@ -135,8 +134,7 @@ Claude Code 슬래시 커맨드입니다 — **한 줄씩** 입력하세요:
 | `weekly-adapt` | 주간 적응 루프: 실제 로그 → 피로 평가 → 다음 주 조정 → 게이트 |
 | `race-week` | 레이스 직전 병렬 협의: 페이스 + 연료 + 피지오 동시 → 하나의 레이스데이 브리프 |
 | `pb-week` | 이번 주 플랜을 시각적·인쇄용 카드로 (일간 `/pb-today`·블록 `/pb-plan`의 주간 짝) |
-| `pb-deck` | 분석 → self-contained HTML 슬라이드 덱 (인라인 SVG 차트, 오프라인 실행) |
-| `pb-report` | 분석 → 인쇄·PDF용 종합 리포트 문서 (`pb-deck` 슬라이드 덱의 문서 버전) |
+| `pb-report` | 분석 → 인쇄·PDF용 종합 리포트 문서 (인라인 SVG 차트, self-contained, 인쇄·PDF 준비) |
 
 게이트 레인이 일반 AI 어시스턴트와의 핵심 차이입니다: **`plan-critic`이 모든 계획을 당신이 보기 전에 검토합니다.** Self-approve 없음. 위험한 적재량 증가나 부족한 테이퍼가 담긴 계획은 절대 당신에게 도달하지 않습니다.
 

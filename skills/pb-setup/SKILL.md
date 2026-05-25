@@ -7,10 +7,10 @@ level: 4
 
 <Purpose>
 pb-setup is the single entry point a new user runs right after installing the plugin. It takes
-someone from "just installed, nothing set up" to "first diagnosis + visual deck" in one guided
+someone from "just installed, nothing set up" to "first diagnosis + analysis report" in one guided
 flow: it resolves paths, checks dependencies, imports the runner's data, bootstraps their profile
-from that data, optionally captures a goal, and produces the first analysis deck. Everything else
-(`/pb-today`, `/pb-log`, `/pb-deck`, `/pb-plan`) becomes useful only after this runs once.
+from that data, optionally captures a goal, and produces the first analysis report. Everything else
+(`/pb-today`, `/pb-log`, `/pb-report`, `/pb-plan`) becomes useful only after this runs once.
 </Purpose>
 
 <Use_When>
@@ -83,12 +83,12 @@ Ask if they're training for a race: event (10k/half/full), target time, race dat
 
 ## Step 5 — Deliver first value
 - `race-analyst` analyzes the log (+ profile/goal) → write `diagnosis.json` to `OMPB_HOME`.
-- Render the deck: `python3 "$CLAUDE_PLUGIN_ROOT/scripts/build_deck.py" --tz <local-tz>`.
-- Report the deck path and offer to open it (`open <path>` on macOS).
+- Render the report: `python3 "$CLAUDE_PLUGIN_ROOT/scripts/build_report.py" --tz <local-tz>`.
+- Report the report path and offer to open it (`open <path>` on macOS).
 
 ## Step 6 — Show the core loop
 Tell the runner what to do next:
-- `/pb-today` — today's session · `/pb-log <path|text>` — log a run · `/pb-deck` — refresh the deck
+- `/pb-today` — today's session · `/pb-log <path|text>` — log a run · `/pb-report` — refresh the report
 - `/pb-plan "<goal>"` — build a periodized plan · "review my week" — weekly adaptation
 
 </Steps>
@@ -96,5 +96,5 @@ Tell the runner what to do next:
 <Stop_Conditions>
 - `$CLAUDE_PLUGIN_ROOT` unset (not running as an installed plugin) → tell the runner to install the plugin or run scripts from the repo with `python3 scripts/...`.
 - fitdecode missing and the runner declines to install → fall back to CSV / natural-language logging; do not attempt `.fit` import.
-- No data and the runner has none to import → still write a minimal profile from their answers so other commands work; skip the deck until at least one run is logged.
+- No data and the runner has none to import → still write a minimal profile from their answers so other commands work; skip the report until at least one run is logged.
 </Stop_Conditions>

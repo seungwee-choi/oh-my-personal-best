@@ -39,7 +39,7 @@ After installing, run `/pb-setup` (optionally with a path to a COROS/Garmin expo
 /pb-setup /path/to/coros-export.zip
 ```
 
-`/pb-setup` resolves your data directory (OMPB_HOME, `~/.ompb` by default), checks dependencies, imports your existing activity data, and bootstraps your runner profile and PB history. It then runs an initial fitness diagnosis and builds your first analysis deck — so you start with a complete picture of where you are. Once setup is done, the daily loop is `/pb-today`, `/pb-log`, `/pb-deck`, and `/pb-plan`.
+`/pb-setup` resolves your data directory (OMPB_HOME, `~/.ompb` by default), checks dependencies, imports your existing activity data, and bootstraps your runner profile and PB history. It then runs an initial fitness diagnosis and produces your first analysis report — so you start with a complete picture of where you are. Once setup is done, the daily loop is `/pb-today`, `/pb-log`, `/pb-report`, and `/pb-plan`.
 
 ---
 
@@ -76,12 +76,11 @@ You never have to use these — natural language is enough. But if you prefer ex
 
 | Command | Routes to | Effect |
 |---|---|---|
-| `/pb-setup [path]` | `pb-setup` skill | First-run onboarding: import data, bootstrap profile, initial deck |
+| `/pb-setup [path]` | `pb-setup` skill | First-run onboarding: import data, bootstrap profile, initial report |
 | `/pb-plan "sub-3:30 full in 16 weeks"` | `race-plan` skill | Build a full periodized training plan |
 | `/pb-today` | `session-coach` | Get today's session |
 | `/pb-week` | `pb-week` skill | Show this week's training plan as a visual card |
 | `/pb-log <path or text>` | `data-logger` | Log a run (.fit/.zip/CSV file, or plain language) |
-| `/pb-deck` | `pb-deck` skill | Render your analysis as a self-contained HTML slide deck |
 | `/pb-report` | `pb-report` skill | Generate a comprehensive print/PDF-ready training report |
 | `/pb-connect-strava` | `pb-connect-strava` skill | Connect Strava (one-time) and sync activities |
 
@@ -135,8 +134,7 @@ End-to-end workflows cover the full training lifecycle:
 | `weekly-adapt` | Weekly adaptation loop: log actuals → assess fatigue → adjust next week → gate |
 | `race-week` | Parallel race-week consult: pace + fuel + physio at once → one race-day brief |
 | `pb-week` | This week's plan as a visual, print-ready card (the weekly companion to `/pb-today` and `/pb-plan`) |
-| `pb-deck` | Analysis → a self-contained HTML slide deck (inline SVG charts, opens offline) |
-| `pb-report` | Analysis → a comprehensive print/PDF-ready report document (the document counterpart to `pb-deck`) |
+| `pb-report` | Analysis → a comprehensive print/PDF-ready report document (inline SVG charts, self-contained, print/PDF-ready) |
 
 The gate lane is the key difference from a generic AI assistant: **`plan-critic` reviews every plan before you see it.** No self-approval. A plan with an unsafe volume ramp or an inadequate taper never reaches you.
 

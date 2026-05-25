@@ -13,11 +13,6 @@ profile, PBs) with race-analyst's narrative diagnosis and renders them into a ve
 print-friendly template (inline SVG charts, no external dependencies).
 </Purpose>
 
-<Relationship_to_pb_deck>
-- `pb-deck` = a slide deck for a quick visual scan / screenshots (one chart per slide).
-- `pb-report` = a single flowing document for a thorough read or PDF export / sharing with a coach.
-Both read the same state and `diagnosis.json`; use whichever the runner asks for.
-</Relationship_to_pb_deck>
 
 <Use_When>
 - The runner asks for a "report", "full report", "assessment", "리포트", "분석 리포트", "PDF"

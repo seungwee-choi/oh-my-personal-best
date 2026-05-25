@@ -65,26 +65,24 @@ Route by intent. Trivial lookups → answer directly or via `data-logger` (haiku
 | "지난주 기록 어땠어?" / "log: ran 10K in 50:00" | `data-logger` |
 | "이번 주 계획 조정해줘" / weekly check-in | `weekly-adapt` skill |
 | "다음 주가 대회야" / race is next week | `race-week` skill (parallel consult) |
-| "내 데이터 보여줘" / "make a report" / "시각자료로" | `pb-deck` skill (HTML deck of analysis) |
-| "report" / "리포트" / "분석 리포트" / "PDF" / "assessment" | `pb-report` skill (comprehensive print/PDF-ready report) |
+| "내 데이터 보여줘" / "make a report" / "시각자료로" / "report" / "리포트" / "분석 리포트" / "PDF" / "assessment" | `pb-report` skill (comprehensive print/PDF-ready report) |
 | "this week" / "weekly plan" / "주간 계획" / "이번 주 훈련표" / "training schedule" | `pb-week` skill (weekly plan card) |
 | "connect strava" / "스트라바 연동" / "sync strava" | `pb-connect-strava` skill |
 
-Keyword triggers (auto-detect): `"setup" / "처음" / "시작하기" / "get started"` or first run with empty OMPB_HOME → `pb-setup`; `"race plan" / "훈련 계획" / "sub-N" / goal time` → `race-plan`; `"weekly" / "이번 주" / "adjust"` → `weekly-adapt`; `"race week" / "대회 D-7" / "taper"` → `race-week`; `"deck" / "시각자료" / "슬라이드" / "visualize"` → `pb-deck`; `"report" / "리포트" / "PDF"` → `pb-report`; `"week" / "주간" / "weekly plan"` → `pb-week`; `"strava" / "스트라바"` → `pb-connect-strava`.
+Keyword triggers (auto-detect): `"setup" / "처음" / "시작하기" / "get started"` or first run with empty OMPB_HOME → `pb-setup`; `"race plan" / "훈련 계획" / "sub-N" / goal time` → `race-plan`; `"weekly" / "이번 주" / "adjust"` → `weekly-adapt`; `"race week" / "대회 D-7" / "taper"` → `race-week`; `"report" / "리포트" / "PDF" / "시각자료" / "visualize"` → `pb-report`; `"week" / "주간" / "weekly plan"` → `pb-week`; `"strava" / "스트라바"` → `pb-connect-strava`.
 </routing>
 
 <skills>
 End-to-end workflows covering the full training lifecycle:
-- `pb-setup` — **first-run onboarding**: resolves OMPB_HOME, checks fitdecode, imports existing data, bootstraps `runner-profile.json` + `pb-history.json`, optionally sets a goal, then runs race-analyst diagnosis and builds an initial deck. THE entry point after install.
+- `pb-setup` — **first-run onboarding**: resolves OMPB_HOME, checks fitdecode, imports existing data, bootstraps `runner-profile.json` + `pb-history.json`, optionally sets a goal, then runs race-analyst diagnosis and produces the first analysis report. THE entry point after install.
 - `race-plan` — **goal → complete periodized plan** in one shot: `race-analyst` (diagnose) → `plan-architect` (periodize) → `session-coach` (fill sessions) → `plan-critic` (gate) → deliver.
 - `weekly-adapt` — **weekly adaptation loop**: `data-logger` (collect actuals) → `race-analyst` (compliance/fatigue) → `plan-architect` (adjust next week) → `plan-critic` (gate).
 - `race-week` — **parallel race-week consult**: `pace-strategist` + `fuel-advisor` + `physio-advisor` in parallel, then synthesize a race-day brief.
-- `pb-deck` — **analysis → visual deck**: `race-analyst` writes `diagnosis.json`, then `scripts/build_deck.py` renders a single self-contained HTML slide deck (inline SVG charts) to `$OMPB_HOME/decks/`.
-- `pb-report` — **comprehensive print/PDF-ready athlete report**: `race-analyst` diagnosis + `scripts/build_report.py` → self-contained HTML at `$OMPB_HOME/reports/`; the document counterpart to `pb-deck`.
+- `pb-report` — **comprehensive print/PDF-ready athlete report**: `race-analyst` diagnosis + `scripts/build_report.py` → self-contained HTML at `$OMPB_HOME/reports/` (inline SVG charts, print/PDF-ready, fully offline).
 - `pb-week` — **weekly plan card**: render the current week's plan as a visual print-ready card (`session-coach` fills `$OMPB_HOME/plan-week.json` → `build_week.py`); the weekly companion to `/pb-today` (one day) and `/pb-plan` (whole block).
 - `pb-connect-strava` — connect a Strava account (user's own app + refresh token, OAuth via localhost) and sync activities; auto-refreshes.
 
-Commands are thin dispatchers: `/pb-setup` → pb-setup, `/pb-plan` → race-plan, `/pb-today` → session-coach, `/pb-week` → pb-week, `/pb-log` → data-logger, `/pb-deck` → pb-deck, `/pb-report` → pb-report, `/pb-connect-strava` → pb-connect-strava.
+Commands are thin dispatchers: `/pb-setup` → pb-setup, `/pb-plan` → race-plan, `/pb-today` → session-coach, `/pb-week` → pb-week, `/pb-log` → data-logger, `/pb-report` → pb-report, `/pb-connect-strava` → pb-connect-strava.
 </skills>
 
 <data_ingest>

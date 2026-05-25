@@ -179,7 +179,7 @@ def main(argv=None):
     sys.stderr.write(f"# build_report.py: report ({args.lang}) from {data['totals']['activities']} "
                      f"activities -> {out}\n")
     if not has_diag:
-        sys.stderr.write("#   note: no diagnosis.json — run race-analyst (or /pb-deck) first for "
+        sys.stderr.write("#   note: no diagnosis.json — run race-analyst first for "
                          "the summary/limiter/findings sections.\n")
     print(out)
     return 0

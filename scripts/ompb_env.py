@@ -2,7 +2,7 @@
 """
 Shared path resolution for oh-my-personal-best (OMPB) scripts.
 
-OMPB_HOME is where the runner's state lives (training-log.jsonl, goal.json, decks/, ...).
+OMPB_HOME is where the runner's state lives (training-log.jsonl, goal.json, reports/, ...).
 It is resolved with this precedence (smart resolve):
   1. explicit argument (--home)
   2. $OMPB_HOME environment variable
@@ -65,10 +65,6 @@ def log_path(home):
 
 def state_path(home, name):
     return os.path.join(home, name)
-
-
-def decks_dir(home):
-    return os.path.join(home, "decks")
 
 
 if __name__ == "__main__":

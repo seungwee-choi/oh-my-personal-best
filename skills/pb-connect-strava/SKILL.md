@@ -59,7 +59,7 @@ Refreshes the access token automatically, pages through all activities, normaliz
 `$OMPB_HOME/training-log.jsonl` (deduped by `source_id`). Report the summary (new activities, by sport).
 
 ## Step 4 — Hand off
-- If the runner is new, continue `/pb-setup` (profile bootstrap + first deck).
+- If the runner is new, continue `/pb-setup` (profile bootstrap + first report).
 - Ongoing: re-run `import_strava.py` (or `/pb-log strava`) anytime to pull new activities — no
   re-auth needed; the stored refresh token mints fresh access tokens.
 

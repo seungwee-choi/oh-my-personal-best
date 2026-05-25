@@ -112,7 +112,7 @@ shapes. Times are stored as `HH:MM:SS` or `MM:SS` strings; paces as `MM:SS` per 
 - `summary` (total weekly km, sessions count) is auto-computed by `build_week.py` if absent.
 - Overwritten each time `session-coach` produces a fresh weekly plan; the rendered HTML is written to `$OMPB_HOME/weeks/`.
 
-## `diagnosis.json` (optional — written by race-analyst, consumed by pb-deck)
+## `diagnosis.json` (optional — written by race-analyst, consumed by pb-report)
 ```json
 {
   "summary": "one-paragraph plain-language overview of the training picture",
@@ -142,10 +142,6 @@ Written by `scripts/strava_connect.py` after the one-time OAuth flow; read and u
 - `athlete_id`: the Strava athlete id, used for logging/debugging only.
 - **This file contains secrets. It is gitignored with the rest of `$OMPB_HOME`. Never commit it.**
 - Training-log entries imported from Strava carry `source: "strava"` and `source_id: "strava-<activityId>"` for deduplication.
-
-## `decks/` (generated artifacts)
-`scripts/build_deck.py` writes self-contained HTML slide decks to `$OMPB_HOME/decks/deck-<YYYY-MM-DD>.html`.
-These are derived outputs (regenerable from the log + JSON state); they are gitignored with the rest of `$OMPB_HOME`.
 
 ## `reports/` (generated artifacts)
 `scripts/build_report.py` writes comprehensive athlete report HTML to `$OMPB_HOME/reports/report-<YYYY-MM-DD>.html`.
