@@ -34,7 +34,10 @@ If `$OMPB_HOME/diagnosis.json` is missing or stale, delegate to `oh-my-personal-
 to analyze the log (+ `runner-profile.json`, `goal.json`) and have the orchestrator write
 `$OMPB_HOME/diagnosis.json` (`{summary, limiter, observations[], generated_at}`). The report's
 Executive Summary, Limiter, and Key Findings sections come from this. Without it the report still
-renders (those sections are empty) — prefer to generate it.
+renders (those sections are empty) — prefer to generate it. The diagnosis text MUST be written in
+the report's language (`config.json` `language` / `--lang`) — these fields are injected verbatim,
+so an English diagnosis in a `--lang ko` report yields a mixed-language document. If an existing
+`diagnosis.json` is in the wrong language, regenerate (or translate) it before rendering.
 
 ## Step 3 — Render the report
 ```

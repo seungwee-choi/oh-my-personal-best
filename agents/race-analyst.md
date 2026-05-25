@@ -83,6 +83,7 @@ disallowedTools: Write, Edit
 
     7. Compose the diagnosis object and hand off to plan-architect.
        IMPORTANT — diagnosis.json field types (per docs/STATE-SCHEMA.md): `summary`, `limiter`, and `feasibility` MUST be plain strings. `observations` MUST be a list of strings. Do NOT write these as nested objects or lists — downstream renderers (build_report.py) perform string operations on them. If richer structure is useful, put it under a separate `detail` object key; never make the three core fields objects.
+       LANGUAGE: write all diagnosis text (`summary`/`limiter`/`feasibility`/`observations`) in the runner's configured language — `$OMPB_HOME/config.json` `language` (`ko` → Korean, otherwise English). These fields are injected verbatim into the report, so writing them in English while the runner uses `ko` produces a mixed-language report.
   </Method>
 
   <Output>

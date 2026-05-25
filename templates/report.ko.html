@@ -1074,7 +1074,7 @@ function render(D) {
       </div>
       <div>
         <h3>평균 심박수 · bpm</h3>
-        <p style="color:var(--muted); font-size:12.5px">HR는 노력의 진실 신호다. 거의 모든 구간에서 130대 초·중반에 머묵러 있는데, §06에서 보이듯 바로 이 안정성이 문제의 핵심이다.</p>
+        <p style="color:var(--muted); font-size:12.5px">심박수는 노력 강도를 가장 정직하게 보여주는 지표다. 거의 모든 구간에서 130대 초·중반에 머물러 있는데, §06에서 보이듯 바로 이 안정성이 문제의 핵심이다.</p>
         <div class="chart" id="chart-hr"></div>
       </div>
     </div>
@@ -1095,7 +1095,7 @@ function render(D) {
   const sec6 = el('section', { class: 'section pagebreak' });
   sec6.innerHTML = `
     ${sectionHeadHTML('06', '유산소 효율', '핵심 인사이트 · HR vs 페이스')}
-    <p>HR 기록이 있는 800회 이상의 세션을 평균 내어 페이스 대비 노력(HR)을 그렸다. 우상향 공선은 깔끔하고 단조롭다 — 빠른 페이스일수록 높은 HR이 필요하다. 이것은 일관된 유산소 엔진의 증거다. 이야기의 초점은 대부분의 트레이닝이 발생하는 <b>이지 구간(6:00–6:30 /km)</b>에 있다.</p>
+    <p>HR 기록이 있는 800회 이상의 세션을 평균 내어 페이스 대비 노력(HR)을 그렸다. 우상향 곡선은 깔끔하고 일관적이다 — 빠른 페이스일수록 높은 HR이 필요하다. 이것은 일관된 유산소 엔진의 증거다. 핵심은 대부분의 트레이닝이 발생하는 <b>이지 구간(6:00–6:30 /km)</b>에 있다.</p>
     <div class="chart" id="chart-hrpace"></div>
     <div class="legend">
       <span><span class="sw" style="background:${PAL.accent}; opacity:0.18; border:1px solid ${PAL.accent}"></span>페이스 구간 · 원의 면적 = 세션 수</span>
@@ -1104,7 +1104,7 @@ function render(D) {
     <div class="col-2" style="margin-top:26px; align-items:start;">
       <div>
         <h3>정체 구간, 눈에 보이다</h3>
-        <p>이지 구간 세션만 개뀐 다시 한 반기 단위로 집계하면 제한 요인이 드러난다. 볼륨이 3배로 늘어난 동안에도 <b>평균 이지 HR은 23개월간 거의 움직이지 않았다</b>. 선이 평탄하다 — 같은 노력에서 유산소 엔진의 효율이 개선되지 않았음을 의미한다.</p>
+        <p>이지 구간 세션만 골라 반기 단위로 집계하면 제한 요인이 드러난다. 볼륨이 3배로 늘어난 동안에도 <b>평균 이지 HR은 23개월간 거의 움직이지 않았다</b>. 선이 평탄하다 — 같은 노력에서 유산소 엔진의 효율이 개선되지 않았음을 의미한다.</p>
         <div class="pull">"3배 볼륨 증가 → 이지 구간 경제성 0 bpm."</div>
       </div>
       <div class="chart" id="chart-easy"></div>
@@ -1136,7 +1136,7 @@ function render(D) {
       </div>
       <div>
         <h3>HR 기준 · 실제 분포</h3>
-        <p style="color:var(--muted); font-size:12.5px; margin-bottom:14px">모든 세션을 이지 구간 기준 HR×페이스 위치로 재분류하면 다소 양극화된 분포가 드러난다 — 라벨이 압시하는 것보다 더 많은 퀄리티 훈련을 하고 있다.</p>
+        <p style="color:var(--muted); font-size:12.5px; margin-bottom:14px">모든 세션을 이지 구간 기준 HR×페이스 위치로 재분류하면 다소 양극화된 분포가 드러난다 — 라벨이 암시하는 것보다 더 많은 퀄리티 훈련을 하고 있다.</p>
         <div class="bar-comp">
           ${barRowHTML('이지 (HR)', ihr.easy * 100, 100, PAL.accent, true)}
           ${barRowHTML('모더릿 (HR)', ihr.moderate * 100, 100, PAL.accentInk, true)}
@@ -1153,7 +1153,7 @@ function render(D) {
   const sec8 = el('section', { class: 'section pagebreak' });
   sec8.innerHTML = `
     ${sectionHeadHTML('08', '장거리 러닝 추이', '월별 최장 거리 · KM')}
-    <p>2024년 10월 이후로 하프·풀코스 거리의 장거리 러닝이 반복적으로 수행되고 있다. 2025년 12월 100&nbsp;km 울트라는 이 기록 전체를 앛당기는 양공 이벤트다 — 발견 04 참고.</p>
+    <p>2024년 10월 이후로 하프·풀코스 거리의 장거리 러닝이 반복적으로 수행되고 있다. 2025년 12월 100&nbsp;km 울트라는 이 기록 전체를 왜곡하는 이상치(outlier) 이벤트다 — 발견 04 참고.</p>
     <div class="chart" id="chart-long"></div>
   `;
   root.appendChild(sec8);
@@ -1204,7 +1204,7 @@ function render(D) {
       <div class="rec">
         <div class="tag"><span>일관성</span><span class="num">02 / 04</span></div>
         <h3>최저 주간 볼륨을 지킨다.</h3>
-        <p>테이퍼·부상 구간이 아니라면 30 km 미만의 주는 제거한다. 최근 블록의 28 km / 18 km 으래는 자극 사슬을 끊으며 변동성의 꾬리 역할을 한다.</p>
+        <p>테이퍼·부상 구간이 아니라면 30 km 미만의 주는 제거한다. 최근 블록의 28 km / 18 km 같은 주는 자극 사슬을 끊으며 변동성의 꼬리 역할을 한다.</p>
         <div class="how"><b>구체 액션:</b> 주간 하한선 = ${Math.round(t.avg_weekly_run_km * 0.7)} km. 가장 가벼운 비테이퍼 주에도 이지 8 km × 4회를 유지한다.</div>
       </div>
       <div class="rec">
@@ -1216,8 +1216,8 @@ function render(D) {
       <div class="rec">
         <div class="tag"><span>퀄리티 유지</span><span class="num">04 / 04</span></div>
         <h3>양극화된 분포를 유지한다.</h3>
-        <p>HR 기준 58 / 24 / 18 분포는 건강하다 — 효율 블록 중에도 평준화하지 않는다. 주 1회 퀄리티 세션(윈쇼 혹은 VO₂)과 장거리 러닝은 계속 유지한다.</p>
-        <div class="how"><b>구체 액션:</b> 주 1회 5k · km당 3:50 관련 더 또는 8 × 3분 · km당 3:40 — 이지 훈련이 경제성을 재구축하는 동안 상단 스피드를 보호한다.</div>
+        <p>HR 기준 58 / 24 / 18 분포는 건강하다 — 효율 블록 중에도 평준화하지 않는다. 주 1회 퀄리티 세션(템포 또는 VO₂)과 장거리 러닝은 계속 유지한다.</p>
+        <div class="how"><b>구체 액션:</b> 주 1회 5k · km당 3:50 반복(reps) 또는 8 × 3분 · km당 3:40 — 이지 훈련이 경제성을 재구축하는 동안 상단 스피드를 보호한다.</div>
       </div>
     </div>
   `;
