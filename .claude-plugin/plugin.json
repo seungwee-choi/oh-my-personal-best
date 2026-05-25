@@ -22,7 +22,8 @@
     "./skills/weekly-adapt/",
     "./skills/race-week/",
     "./skills/pb-deck/",
-    "./skills/pb-report/"
+    "./skills/pb-report/",
+    "./skills/pb-week/"
   ],
   "commands": "./commands/"
 }

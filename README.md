@@ -79,6 +79,7 @@ You never have to use these — natural language is enough. But if you prefer ex
 | `/pb-setup [path]` | `pb-setup` skill | First-run onboarding: import data, bootstrap profile, initial deck |
 | `/pb-plan "sub-3:30 full in 16 weeks"` | `race-plan` skill | Build a full periodized training plan |
 | `/pb-today` | `session-coach` | Get today's session |
+| `/pb-week` | `pb-week` skill | Show this week's training plan as a visual card |
 | `/pb-log <path or text>` | `data-logger` | Log a run (.fit/.zip/CSV file, or plain language) |
 | `/pb-deck` | `pb-deck` skill | Render your analysis as a self-contained HTML slide deck |
 | `/pb-report` | `pb-report` skill | Generate a comprehensive print/PDF-ready training report |
@@ -124,15 +125,16 @@ Eight specialist agents organized across four lanes. You never pick an agent —
 | **Support** | `fuel-advisor` | Sonnet | Nutrition, carb-loading, race-day fueling schedule |
 | **Gate** | `plan-critic` | Opus | Physiological quality gate — no plan reaches you without its sign-off |
 
-### The Four Skills
+### The Skills
 
-Four end-to-end workflows cover the full training lifecycle:
+End-to-end workflows cover the full training lifecycle:
 
 | Skill | What it does |
 |---|---|
 | `race-plan` | Goal → complete periodized plan in one shot: diagnose → architect → fill sessions → gate → deliver |
 | `weekly-adapt` | Weekly adaptation loop: log actuals → assess fatigue → adjust next week → gate |
 | `race-week` | Parallel race-week consult: pace + fuel + physio at once → one race-day brief |
+| `pb-week` | This week's plan as a visual, print-ready card (the weekly companion to `/pb-today` and `/pb-plan`) |
 | `pb-deck` | Analysis → a self-contained HTML slide deck (inline SVG charts, opens offline) |
 | `pb-report` | Analysis → a comprehensive print/PDF-ready report document (the document counterpart to `pb-deck`) |
 

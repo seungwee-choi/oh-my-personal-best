@@ -1,0 +1,901 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Weekly Training Plan — Week 7 / 16</title>
+<style>
+/* =========================================================
+   OMPB — Weekly Training Plan
+   One self-contained HTML. System fonts. No CDNs.
+   Forward-looking, glanceable, motivating. Single accent;
+   session types use a coordinated earthy categorical palette.
+   ========================================================= */
+
+:root {
+  --paper: #faf8f3;
+  --paper-2: #f3efe6;
+  --paper-3: #ebe6d8;
+  --ink: #1c1a17;
+  --ink-2: #2c2925;
+  --muted: #6f6c66;
+  --muted-2: #9a968e;
+  --rule: #e2ddd1;
+  --rule-2: #cfc9bb;
+  --accent: #b8401a;
+  --accent-ink: #7a2a10;
+  --accent-soft: #f4e3d8;
+
+  /* session type palette */
+  --t-easy: #4f7d6a;
+  --t-long: #b8401a;
+  --t-tempo: #c47b1a;
+  --t-interval: #8a1f1f;
+  --t-recovery: #5d7894;
+  --t-rest: #a8a298;
+  --t-cross: #6d5a8a;
+
+  --serif: "Iowan Old Style", "Palatino Linotype", Palatino, "Hoefler Text", "Georgia", "Times New Roman", serif;
+  --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", Helvetica, Arial, system-ui, sans-serif;
+  --mono: ui-monospace, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  padding: 0;
+  background: #ebe7dd;
+  color: var(--ink);
+  font-family: var(--sans);
+  font-size: 13px;
+  line-height: 1.45;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------- Sheet (one printed page) ---------- */
+.sheet {
+  width: 1180px;
+  margin: 24px auto;
+  background: var(--paper);
+  padding: 32px 36px 28px;
+  box-shadow: 0 30px 60px -30px rgba(28, 26, 23, 0.25);
+  position: relative;
+}
+
+/* ---------- Typography ---------- */
+h1, h2, h3 { font-family: var(--serif); font-weight: 600; color: var(--ink); letter-spacing: -0.01em; margin: 0; }
+h1 { font-size: 38px; line-height: 1.0; letter-spacing: -0.02em; }
+h2 { font-size: 17px; line-height: 1.15; }
+h3 { font-size: 14px; line-height: 1.2; font-weight: 600; font-family: var(--sans); }
+p  { margin: 0; color: var(--ink-2); }
+.eyebrow {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.num { font-variant-numeric: tabular-nums; }
+
+/* ---------- Header strip ---------- */
+.head {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: 24px;
+  padding-bottom: 16px;
+  border-bottom: 1.5px solid var(--ink);
+}
+.head .brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.head .brand .mark {
+  width: 30px; height: 30px;
+  border: 1.5px solid var(--ink);
+  display: grid; place-items: center;
+  font-family: var(--serif);
+  font-style: italic;
+  font-weight: 600;
+  font-size: 15px;
+}
+.head .brand .word {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  line-height: 1.3;
+}
+.head .brand .word b { color: var(--ink); font-weight: 700; }
+.head .brand .word i { font-style: normal; color: var(--muted); }
+
+.head .title {
+  text-align: center;
+}
+.head .title .week-tag {
+  font-family: var(--mono);
+  font-size: 10.5px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-bottom: 6px;
+}
+.head .title h1 .phase {
+  color: var(--accent);
+  font-style: italic;
+}
+.head .title .range {
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.10em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-top: 6px;
+}
+
+.head .meta {
+  display: flex;
+  justify-content: flex-end;
+  gap: 18px;
+  align-items: center;
+}
+.head .meta .chip {
+  text-align: right;
+  font-family: var(--mono);
+  font-size: 9.5px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.head .meta .chip b {
+  display: block;
+  font-family: var(--sans);
+  font-size: 15px;
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--ink);
+  font-weight: 600;
+  margin-top: 2px;
+}
+.head .meta .chip .accent { color: var(--accent); }
+
+/* ---------- Hero row ---------- */
+.hero {
+  display: grid;
+  grid-template-columns: 220px 1fr 320px;
+  gap: 28px;
+  padding: 20px 0 18px;
+  border-bottom: 1px solid var(--rule);
+  align-items: stretch;
+}
+.hero .target {
+  text-align: left;
+}
+.hero .target .lbl {
+  font-family: var(--mono);
+  font-size: 9.5px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 8px;
+}
+.hero .target .v {
+  font-family: var(--serif);
+  font-size: 64px;
+  line-height: 0.95;
+  letter-spacing: -0.025em;
+  color: var(--ink);
+}
+.hero .target .v small {
+  font-family: var(--sans);
+  font-size: 16px;
+  color: var(--muted);
+  font-weight: 500;
+  margin-left: 4px;
+  letter-spacing: 0.04em;
+  vertical-align: 8px;
+}
+.hero .target .ramp {
+  margin-top: 8px;
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  color: var(--accent);
+}
+.hero .target .ramp .prev { color: var(--muted); }
+
+.hero .focus {
+  align-self: center;
+  padding: 0 4px;
+}
+.hero .focus .lbl {
+  font-family: var(--mono);
+  font-size: 9.5px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 8px;
+}
+.hero .focus p {
+  font-family: var(--serif);
+  font-size: 19px;
+  line-height: 1.35;
+  color: var(--ink);
+  letter-spacing: -0.005em;
+}
+
+.hero .phase {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+.hero .phase .lbl {
+  font-family: var(--mono);
+  font-size: 9.5px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 10px;
+  display: flex;
+  justify-content: space-between;
+}
+.hero .phase .lbl b { color: var(--ink); font-weight: 600; }
+.hero .phase .bar {
+  height: 8px;
+  background: var(--paper-2);
+  border: 1px solid var(--rule);
+  position: relative;
+}
+.hero .phase .bar > span {
+  display: block;
+  height: 100%;
+  background: var(--accent);
+}
+.hero .phase .marks {
+  position: relative;
+  margin-top: 6px;
+  height: 14px;
+}
+.hero .phase .marks > span {
+  position: absolute;
+  transform: translateX(-50%);
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: 0.06em;
+  color: var(--muted-2);
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+.hero .phase .marks > span.cur {
+  color: var(--accent);
+  font-weight: 700;
+}
+
+/* ---------- Week grid ---------- */
+.week {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 8px;
+  margin-top: 18px;
+}
+.day {
+  background: var(--paper);
+  border: 1px solid var(--rule);
+  padding: 12px 12px 14px;
+  position: relative;
+  break-inside: avoid;
+  display: flex;
+  flex-direction: column;
+  min-height: 360px;
+}
+.day .chip-strip {
+  height: 4px;
+  background: var(--type-color, var(--muted));
+  position: absolute;
+  left: 0; right: 0; top: 0;
+}
+.day .dow-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-top: 4px;
+  margin-bottom: 10px;
+}
+.day .dow {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--ink);
+  font-weight: 700;
+}
+.day .date {
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--muted);
+  letter-spacing: 0.06em;
+}
+
+.day .type {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--mono);
+  font-size: 9.5px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--type-color, var(--ink));
+  margin-bottom: 6px;
+  font-weight: 700;
+}
+.day .type::before {
+  content: '';
+  display: inline-block;
+  width: 8px; height: 8px;
+  background: var(--type-color, var(--ink));
+}
+
+.day .title {
+  font-family: var(--serif);
+  font-size: 17px;
+  line-height: 1.15;
+  letter-spacing: -0.01em;
+  color: var(--ink);
+  margin-bottom: 12px;
+  min-height: 38px;
+}
+
+.day .dist {
+  font-family: var(--serif);
+  font-size: 44px;
+  line-height: 0.95;
+  letter-spacing: -0.03em;
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+.day .dist small {
+  font-family: var(--sans);
+  font-size: 13px;
+  color: var(--muted);
+  font-weight: 500;
+  margin-left: 3px;
+  letter-spacing: 0.04em;
+  vertical-align: 6px;
+}
+.day .dist.rest {
+  font-style: italic;
+  color: var(--muted);
+  font-size: 32px;
+  letter-spacing: -0.01em;
+}
+
+.day .pace-row {
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px dashed var(--rule);
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 6px;
+  align-items: baseline;
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--ink-2);
+}
+.day .pace-row .pace { font-weight: 600; color: var(--ink); }
+.day .pace-row .zone {
+  font-size: 9.5px;
+  letter-spacing: 0.10em;
+  color: var(--type-color, var(--muted));
+  font-weight: 700;
+  padding: 2px 5px;
+  border: 1px solid var(--type-color, var(--rule-2));
+  border-radius: 2px;
+}
+
+.day .structure {
+  margin-top: 10px;
+  font-family: var(--mono);
+  font-size: 10.5px;
+  line-height: 1.4;
+  color: var(--ink-2);
+  flex: 1;
+}
+.day .purpose {
+  margin-top: 10px;
+  padding-top: 8px;
+  border-top: 1px solid var(--rule);
+  font-family: var(--sans);
+  font-style: italic;
+  font-size: 11.5px;
+  color: var(--muted);
+  line-height: 1.35;
+}
+
+/* rest day */
+.day.is-rest {
+  background: var(--paper-2);
+}
+.day.is-rest .structure { color: var(--muted); }
+
+/* today */
+.day.is-today {
+  background: #fff;
+  outline: 2.5px solid var(--accent);
+  outline-offset: -2.5px;
+  box-shadow: 0 8px 20px -10px rgba(184, 64, 26, 0.35);
+}
+.day.is-today::after {
+  content: 'TODAY';
+  position: absolute;
+  top: -10px;
+  right: 10px;
+  background: var(--accent);
+  color: #fff;
+  font-family: var(--mono);
+  font-size: 9.5px;
+  letter-spacing: 0.22em;
+  font-weight: 700;
+  padding: 3px 7px 2px;
+}
+
+/* done */
+.day.is-done .title,
+.day.is-done .dist { color: var(--muted-2); text-decoration: line-through; }
+.day.is-done::before {
+  content: '✓';
+  position: absolute;
+  top: 8px; right: 10px;
+  color: var(--t-easy);
+  font-weight: 700;
+  font-size: 14px;
+}
+
+/* ---------- Bottom row ---------- */
+.bottom {
+  display: grid;
+  grid-template-columns: 1.05fr 1fr;
+  gap: 28px;
+  margin-top: 22px;
+  padding-top: 18px;
+  border-top: 1px solid var(--rule);
+}
+
+.summary { }
+.summary h2 {
+  font-family: var(--sans);
+  font-size: 10px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 12px;
+  font-weight: 600;
+}
+.summary .stats {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 0;
+  border-top: 1.5px solid var(--ink);
+  border-bottom: 1px solid var(--rule);
+  margin-bottom: 14px;
+}
+.summary .stats .s {
+  padding: 10px 12px 11px;
+  border-right: 1px solid var(--rule);
+}
+.summary .stats .s:last-child { border-right: 0; }
+.summary .stats .s .l {
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 5px;
+}
+.summary .stats .s .v {
+  font-family: var(--serif);
+  font-size: 26px;
+  line-height: 1;
+  letter-spacing: -0.02em;
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+.summary .stats .s .v small {
+  font-family: var(--sans);
+  font-size: 10px;
+  color: var(--muted);
+  margin-left: 2px;
+  vertical-align: 3px;
+}
+
+.summary .poly-row {
+  display: grid;
+  grid-template-columns: 90px 1fr;
+  gap: 14px;
+  align-items: center;
+  margin-bottom: 6px;
+}
+.summary .poly-row .lbl {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.summary .poly {
+  height: 22px;
+  background: var(--paper-2);
+  display: flex;
+  position: relative;
+}
+.summary .poly > span {
+  position: relative;
+  display: flex;
+  align-items: center;
+  padding: 0 8px;
+  font-family: var(--mono);
+  font-size: 10px;
+  color: #fff;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+}
+.summary .poly .easy { background: var(--t-easy); }
+.summary .poly .qual { background: var(--accent); }
+
+.summary .ramp-row {
+  margin-top: 12px;
+  display: grid;
+  grid-template-columns: 90px 1fr;
+  gap: 14px;
+  align-items: center;
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--ink-2);
+}
+.summary .ramp-row .lbl {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.summary .ramp-row .arr { color: var(--accent); font-weight: 700; }
+
+/* ---------- Coach notes ---------- */
+.notes h2 {
+  font-family: var(--sans);
+  font-size: 10px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 10px;
+  font-weight: 600;
+}
+.notes ol {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: 9px;
+  counter-reset: notes;
+}
+.notes li {
+  counter-increment: notes;
+  position: relative;
+  padding-left: 28px;
+  font-size: 12.5px;
+  line-height: 1.45;
+  color: var(--ink-2);
+}
+.notes li::before {
+  content: counter(notes, decimal-leading-zero);
+  position: absolute;
+  left: 0; top: 1px;
+  font-family: var(--mono);
+  font-size: 10.5px;
+  color: var(--accent);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+
+/* ---------- Footer ---------- */
+.foot {
+  margin-top: 18px;
+  padding-top: 12px;
+  border-top: 1.5px solid var(--ink);
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  gap: 18px;
+  align-items: center;
+}
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  font-family: var(--mono);
+  font-size: 9.5px;
+  letter-spacing: 0.10em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.legend .sw {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  margin-right: 5px;
+  vertical-align: -1px;
+}
+.stamp {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  border: 1.5px solid var(--t-easy);
+  color: var(--t-easy);
+  padding: 4px 9px 3px;
+  font-family: var(--mono);
+  font-size: 9.5px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  font-weight: 700;
+  transform: rotate(-1.5deg);
+}
+.stamp::before {
+  content: '✓';
+  font-size: 14px;
+  line-height: 1;
+}
+.disclaim {
+  text-align: right;
+  font-family: var(--mono);
+  font-size: 9.5px;
+  color: var(--muted);
+  letter-spacing: 0.04em;
+  line-height: 1.4;
+}
+
+/* ---------- Print (one page, A4 landscape) ---------- */
+@page { size: A4 landscape; margin: 8mm; }
+@media print {
+  html, body { background: #fff; }
+  .sheet { box-shadow: none; margin: 0; padding: 0; width: auto; }
+  .day { min-height: 0; }
+  * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+}
+
+/* ---------- Responsive (mobile) ---------- */
+@media (max-width: 900px) {
+  .sheet { width: auto; margin: 12px; padding: 20px; }
+  .head { grid-template-columns: 1fr; }
+  .head .title { text-align: left; }
+  .head .meta { justify-content: flex-start; flex-wrap: wrap; }
+  .hero { grid-template-columns: 1fr; }
+  .week { grid-template-columns: 1fr; }
+  .day { min-height: 0; }
+  .bottom { grid-template-columns: 1fr; }
+  .summary .stats { grid-template-columns: repeat(2, 1fr); }
+  .foot { grid-template-columns: 1fr; }
+  .disclaim { text-align: left; }
+}
+</style>
+</head>
+<body>
+<div class="sheet" id="sheet"></div>
+
+<script>
+/* =========================================================
+   PLAN_DATA — template input. Replace this object to regenerate.
+   ========================================================= */
+const PLAN_DATA = __PLAN_DATA__;
+
+/* ---- i18n strings — swap this block for KR ---- */
+const I18N = {
+  brand: { name: 'OH-MY-PERSONAL-BEST', tagline: 'Marathon Coaching Suite' },
+  weekTag: (n, total) => `Week ${n} of ${total} · Plan`,
+  weekOfTitle: 'Week of',
+  titlePhase: (phase) => `The <span class="phase">${phase}</span> Week`,
+  meta: {
+    athlete: 'Athlete',
+    goal: 'Goal',
+    countdown: 'To race',
+    daysWord: (n) => `${n} d`,
+    weeksWord: (n) => `${n} wks`,
+  },
+  hero: {
+    target: 'This week target',
+    km: 'km',
+    rampUp: (pct, prev) => `▲ ${pct}% vs last week · prev <span class="prev">${prev} km</span>`,
+    rampDown: (pct, prev) => `▼ ${pct}% vs last week · prev <span class="prev">${prev} km</span>`,
+    rampFlat: (prev) => `Flat vs last week · prev <span class="prev">${prev} km</span>`,
+    focus: 'Focus of the week',
+    phase: 'Plan phase',
+  },
+  rest: 'Rest',
+  todayTag: 'TODAY',
+  summary: {
+    title: 'Weekly load summary',
+    totalKm: 'Total',
+    sessions: 'Sessions',
+    quality: 'Quality',
+    longKm: 'Long',
+    rest: 'Rest',
+    polyLbl: 'Polarization',
+    rampLbl: 'Ramp',
+    easyChip: (km) => `Easy ${km} km`,
+    qualChip: (km) => `Quality ${km} km`,
+    rampText: (prev, target, pct) => `${prev} km <span class="arr">→</span> ${target} km &nbsp;·&nbsp; +${pct}%`,
+  },
+  notes: { title: 'Coach notes' },
+  types: {
+    easy: 'Easy', long: 'Long', tempo: 'Tempo',
+    interval: 'Interval', recovery: 'Recovery', rest: 'Rest', cross: 'Cross'
+  },
+  goalEvent: { '10k': '10 km', 'half': 'Half marathon', 'full': 'Marathon' },
+  stamp: 'Plan-critic ✓',
+  disclaim: 'Coaching guidance, not medical advice. Adjust if signals deviate.',
+  monthShort: (m) => ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][m-1],
+  dowShort: { Mon:'Mon', Tue:'Tue', Wed:'Wed', Thu:'Thu', Fri:'Fri', Sat:'Sat', Sun:'Sun' },
+  fmtDate: (iso) => {
+    const d = new Date(iso + 'T00:00:00');
+    return `${I18N.monthShort(d.getMonth()+1)} ${d.getDate()}`;
+  },
+  fmtRange: (a, b) => {
+    const d1 = new Date(a + 'T00:00:00'), d2 = new Date(b + 'T00:00:00');
+    return `${I18N.monthShort(d1.getMonth()+1)} ${d1.getDate()} – ${I18N.monthShort(d2.getMonth()+1)} ${d2.getDate()}, ${d2.getFullYear()}`;
+  },
+  fmtRaceDate: (iso) => {
+    const d = new Date(iso + 'T00:00:00');
+    return `${I18N.monthShort(d.getMonth()+1)} ${d.getDate()}, ${d.getFullYear()}`;
+  }
+};
+
+/* =========================================================
+   Render
+   ========================================================= */
+function render(D) {
+  const sheet = document.getElementById('sheet');
+  const today = D.today;
+  const w = D.week;
+  const g = D.goal;
+  const s = D.summary;
+
+  // ---------- Header ----------
+  const phasePct = Math.round((w.plan_week / w.total_weeks) * 100);
+  const phaseMarks = phaseMarkSpans(w);
+
+  sheet.innerHTML = `
+    <header class="head">
+      <div class="brand">
+        <div class="mark">○</div>
+        <div class="word"><b>${I18N.brand.name}</b><br><i>${I18N.brand.tagline}</i></div>
+      </div>
+      <div class="title">
+        <div class="week-tag">${I18N.weekTag(w.plan_week, w.total_weeks)}</div>
+        <h1>${I18N.titlePhase(w.phase)}</h1>
+        <div class="range">${I18N.weekOfTitle} ${I18N.fmtRange(w.start_date, w.end_date)}</div>
+      </div>
+      <div class="meta">
+        <div class="chip">${I18N.meta.athlete}<b>${D.athlete.label}</b></div>
+        <div class="chip">${I18N.meta.goal}<b>${I18N.goalEvent[g.event]} · ${g.target_time}</b></div>
+        <div class="chip">${I18N.meta.countdown}<b class="accent">${I18N.meta.weeksWord(g.weeks_to_race)}</b></div>
+      </div>
+    </header>
+
+    <section class="hero">
+      <div class="target">
+        <div class="lbl">${I18N.hero.target}</div>
+        <div class="v">${w.target_km}<small>${I18N.hero.km}</small></div>
+        <div class="ramp">${
+          w.ramp_pct > 0 ? I18N.hero.rampUp(w.ramp_pct, w.prev_week_km) :
+          w.ramp_pct < 0 ? I18N.hero.rampDown(-w.ramp_pct, w.prev_week_km) :
+                           I18N.hero.rampFlat(w.prev_week_km)
+        }</div>
+      </div>
+      <div class="focus">
+        <div class="lbl">${I18N.hero.focus}</div>
+        <p>${w.focus}</p>
+      </div>
+      <div class="phase">
+        <div class="lbl"><span>${I18N.hero.phase}</span><b>${w.phase}</b></div>
+        <div class="bar"><span style="width:${phasePct}%"></span></div>
+        <div class="marks">${phaseMarks}</div>
+      </div>
+    </section>
+
+    <section class="week">
+      ${D.days.map(d => dayCard(d, today)).join('')}
+    </section>
+
+    <section class="bottom">
+      <div class="summary">
+        <h2>${I18N.summary.title}</h2>
+        <div class="stats">
+          <div class="s"><div class="l">${I18N.summary.totalKm}</div><div class="v">${s.total_km}<small>km</small></div></div>
+          <div class="s"><div class="l">${I18N.summary.sessions}</div><div class="v">${s.sessions}</div></div>
+          <div class="s"><div class="l">${I18N.summary.quality}</div><div class="v">${s.quality}</div></div>
+          <div class="s"><div class="l">${I18N.summary.longKm}</div><div class="v">${s.long_km}<small>km</small></div></div>
+          <div class="s"><div class="l">${I18N.summary.rest}</div><div class="v">${s.rest_days}<small>d</small></div></div>
+        </div>
+        <div class="poly-row">
+          <div class="lbl">${I18N.summary.polyLbl}</div>
+          <div class="poly">
+            <span class="easy" style="width:${(s.intensity_split.easy_km / s.total_km * 100).toFixed(1)}%">${I18N.summary.easyChip(s.intensity_split.easy_km)}</span>
+            <span class="qual" style="width:${(s.intensity_split.quality_km / s.total_km * 100).toFixed(1)}%">${I18N.summary.qualChip(s.intensity_split.quality_km)}</span>
+          </div>
+        </div>
+        <div class="ramp-row">
+          <div class="lbl">${I18N.summary.rampLbl}</div>
+          <div class="v">${I18N.summary.rampText(w.prev_week_km, w.target_km, w.ramp_pct)}</div>
+        </div>
+      </div>
+
+      <div class="notes">
+        <h2>${I18N.notes.title}</h2>
+        <ol>
+          ${D.coach_notes.map(n => `<li>${n}</li>`).join('')}
+        </ol>
+      </div>
+    </section>
+
+    <footer class="foot">
+      <div class="legend">
+        ${['easy','long','tempo','interval','recovery','rest','cross'].map(t => `
+          <span><span class="sw" style="background:var(--t-${t})"></span>${I18N.types[t]}</span>
+        `).join('')}
+      </div>
+      ${D.critic_approved ? `<span class="stamp">${I18N.stamp}</span>` : ''}
+      <div class="disclaim">${I18N.disclaim}</div>
+    </footer>
+  `;
+}
+
+function dayCard(d, today) {
+  const isToday = d.date === today;
+  const isRest = d.type === 'rest' || d.distance_km === 0;
+  const cls = ['day', `t-${d.type}`, isToday ? 'is-today' : '', isRest ? 'is-rest' : '', d.done ? 'is-done' : ''].filter(Boolean).join(' ');
+  const distHTML = isRest
+    ? `<div class="dist rest">${I18N.rest}</div>`
+    : `<div class="dist">${d.distance_km}<small>km</small></div>`;
+  const paceRow = isRest ? '' : `
+    <div class="pace-row">
+      <div class="pace">${d.pace}<span style="color:var(--muted); font-weight:500; margin-left:4px">/km</span></div>
+      <div class="zone">${d.hr_zone}</div>
+    </div>`;
+
+  return `
+    <article class="${cls}" style="--type-color: var(--t-${d.type})">
+      <div class="chip-strip"></div>
+      <div class="dow-row">
+        <span class="dow">${I18N.dowShort[d.dow] || d.dow}</span>
+        <span class="date">${I18N.fmtDate(d.date)}</span>
+      </div>
+      <div class="type">${I18N.types[d.type]}</div>
+      <div class="title">${d.title}</div>
+      ${distHTML}
+      ${paceRow}
+      <div class="structure">${d.structure}</div>
+      <div class="purpose">${d.purpose}</div>
+    </article>`;
+}
+
+function phaseMarkSpans(w) {
+  // 3 marks: 1, current, total
+  const marks = [
+    { n: 1, label: '1', pos: 0 },
+    { n: w.plan_week, label: `Wk ${w.plan_week}`, pos: ((w.plan_week - 1) / (w.total_weeks - 1)) * 100, cur: true },
+    { n: w.total_weeks, label: `Wk ${w.total_weeks}`, pos: 100 }
+  ];
+  // dedupe overlapping
+  return marks
+    .filter((m, i, arr) => i === 0 || Math.abs(m.pos - arr[i-1].pos) > 6)
+    .map(m => `<span class="${m.cur ? 'cur' : ''}" style="left:${m.pos}%; ${m.pos < 8 ? 'transform:none' : m.pos > 92 ? 'transform:translateX(-100%)' : ''}">${m.label}</span>`)
+    .join('');
+}
+
+render(PLAN_DATA);
+</script>
+</body>
+</html>

@@ -68,6 +68,50 @@ shapes. Times are stored as `HH:MM:SS` or `MM:SS` strings; paces as `MM:SS` per 
 }
 ```
 
+## `plan-week.json` (current week's PLAN_DATA — written by session-coach, rendered by build_week.py)
+```json
+{
+  "athlete": "string",
+  "today": "YYYY-MM-DD",
+  "goal": {
+    "event": "10k | half | full",
+    "target_time": "H:MM:SS",
+    "race_date": "YYYY-MM-DD",
+    "weeks_to_race": 0
+  },
+  "week": {
+    "plan_week": 0,
+    "total_weeks": 0,
+    "phase": "base | build | peak | taper",
+    "start_date": "YYYY-MM-DD",
+    "end_date": "YYYY-MM-DD",
+    "target_km": 0,
+    "prev_week_km": 0,
+    "ramp_pct": 0,
+    "focus": "string"
+  },
+  "days": [
+    {
+      "dow": "Mon | Tue | Wed | Thu | Fri | Sat | Sun",
+      "date": "YYYY-MM-DD",
+      "type": "easy | long | tempo | interval | recovery | rest | cross",
+      "title": "string",
+      "distance_km": 0,
+      "pace": "MM:SS",
+      "hr_zone": 0,
+      "structure": "string",
+      "purpose": "string",
+      "done": false
+    }
+  ],
+  "coach_notes": ["string"],
+  "critic_approved": true
+}
+```
+- `type` ∈ `easy | long | tempo | interval | recovery | rest | cross` (matches `training-log.jsonl`).
+- `summary` (total weekly km, sessions count) is auto-computed by `build_week.py` if absent.
+- Overwritten each time `session-coach` produces a fresh weekly plan; the rendered HTML is written to `$OMPB_HOME/weeks/`.
+
 ## `diagnosis.json` (optional — written by race-analyst, consumed by pb-deck)
 ```json
 {
@@ -109,6 +153,12 @@ Each report is print/PDF-ready and fully self-contained (no external dependencie
 (`templates/report.html` for English, `templates/report.ko.html` for Korean) that ship with the plugin and carry a
 `__REPORT_DATA__` placeholder that `build_report.py` fills at render time. These are derived outputs; they are
 gitignored with the rest of `$OMPB_HOME`.
+
+## `weeks/` (generated artifacts)
+`scripts/build_week.py` writes rendered weekly-plan cards to `$OMPB_HOME/weeks/week-<YYYY-MM-DD>.html`.
+Each card is self-contained and one-page printable (no external dependencies). Rendered from vendored templates
+(`templates/week.html` for English, `templates/week.ko.html` for Korean) with a `__PLAN_DATA__` placeholder
+that `build_week.py` fills at render time. These are derived outputs; they are gitignored with the rest of `$OMPB_HOME`.
 
 ## `plans/` (versioned plan snapshots)
 When plan-critic approves a plan, the orchestrator writes a timestamped snapshot to
