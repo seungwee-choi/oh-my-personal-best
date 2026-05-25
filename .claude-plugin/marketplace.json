@@ -9,7 +9,7 @@
     {
       "name": "oh-my-personal-best",
       "description": "Multi-agent orchestration for marathon time improvement (10K / Half / Full). Tell it your goal time in plain language; specialized coaching agents diagnose, plan, and verify. Zero learning curve.",
-      "version": "0.2.3",
+      "version": "0.2.4",
       "author": {
         "name": "oh-my-personal-best contributors"
       },
@@ -24,5 +24,5 @@
       ]
     }
   ],
-  "version": "0.2.3"
+  "version": "0.2.4"
 }
