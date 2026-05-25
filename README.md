@@ -98,12 +98,12 @@ Volume periodization, pace-vs-HR drift, and an aerobic-efficiency plot that make
 
 ## Why oh-my-personal-best?
 
-- **Zero learning curve** — No running jargon required. State a goal; specialists do the rest.
-- **Specialist routing** — Eight coaching agents across four lanes, the right one every time.
-- **Smart model routing** — Opus for diagnosis/design/gating, Sonnet for prescriptions, Haiku for logging. Quality where it matters, cheap where it doesn't.
-- **Never self-approve** — Every plan passes a separate physiological safety gate before you see it.
-- **Safety first** — Any pain signal overrides the plan. A coach, not a doctor.
-- **Your data, unified** — `.fit` files, CSV uploads, Strava sync, and plain-language reports all normalize into one training log.
+- **It reads everything you've ever run** — not last week's averages. Thousands of activities, the full arc of your fitness — the context no human coach has the hours to actually read.
+- **It finds the one thing holding you back** — aerobic base? threshold? durability? Most runners train their strengths and stall. OMPB names your limiter and goes after it.
+- **A plan that's actually yours** — back-calculated from your goal and your real data, not a generic sub-3:30 PDF that has no idea you ran 900 times last year.
+- **It won't get you injured** — every plan clears a separate safety gate before you ever see it. Unsafe volume ramps and crushed tapers never reach you. No self-approval, ever.
+- **It knows when to stop you** — one mention of pain and the plan stands down. A coach, not a doctor.
+- **Zero learning curve** — no jargon, no commands, no dashboards to decode. Say it in plain language; the right specialist answers.
 
 ---
 
@@ -281,6 +281,6 @@ MIT
 
 <div align="center">
 
-**Zero learning curve. Faster finish.**
+**Your data already knows your next PB. Don't let it go to waste.**
 
 </div>
