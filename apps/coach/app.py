@@ -33,6 +33,7 @@ try:
         ClaudeSDKClient,
         ResultMessage,
         TextBlock,
+        query,
     )
 except ModuleNotFoundError:
     sys.stderr.write("error: Agent SDK not installed. Run: pip install claude-agent-sdk\n")
@@ -87,6 +88,24 @@ async def run_once(prompt: str) -> None:
     async with ClaudeSDKClient(options=build_options()) as client:
         await client.query(prompt)
         await _stream(client)
+
+
+async def ask(prompt: str, home: Optional[str] = None) -> str:
+    """Run one coaching turn and return the assistant's full text.
+
+    Reusable entry point for non-CLI front ends (e.g. the Discord bot). `home`
+    optionally overrides OMPB_HOME for this call (single-tenant for now; a
+    per-user mapping is a future multi-tenant concern).
+    """
+    if home:
+        os.environ["OMPB_HOME"] = home
+    parts: list[str] = []
+    async for msg in query(prompt=prompt, options=build_options()):
+        if isinstance(msg, AssistantMessage):
+            for block in msg.content:
+                if isinstance(block, TextBlock):
+                    parts.append(block.text)
+    return "".join(parts).strip()
 
 
 async def run_interactive() -> None:

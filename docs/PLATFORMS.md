@@ -102,6 +102,30 @@ This is the productization path: schedule it, wrap it in a service, or back a bo
 
 ---
 
+## Surface 3 — Discord bot (`apps/discord_bot/`) — end-user prototype
+
+Brings the coach to where runners already hang out. DM the bot or @mention it in a
+channel and speak plainly — natural-language messages route to the full Agent SDK
+coach (Surface 2), so the routing brain, specialists, and plan-critic gate all apply.
+Two convenience words attach artifacts: `week` / `주간` → the weekly card,
+`report` / `리포트` → the analysis report.
+
+```bash
+pip install discord.py claude-agent-sdk fitdecode
+export DISCORD_BOT_TOKEN=...      # Discord Developer Portal > Bot > Reset Token
+export OMPB_HOME=/abs/path/.ompb  # the runner's data (single-tenant prototype)
+python -m apps.discord_bot
+```
+
+Portal: enable the **Message Content Intent** (Bot settings); invite with the `bot`
+scope + Send Messages / Attach Files. Agent SDK auth: a logged-in `claude` CLI or
+`ANTHROPIC_API_KEY`.
+
+**Prototype scope:** one shared `OMPB_HOME` (not per-Discord-user). Multi-tenant —
+mapping each Discord user id to their own home — is the next step.
+
+---
+
 ## Verification status
 
 | Component | Status |
@@ -110,6 +134,7 @@ This is the productization path: schedule it, wrap it in a service, or back a bo
 | `agents.py` parsing | ✅ verified — 8/8 agents parse with correct model + read-only gating |
 | **MCP server** | ✅ **live** — driven over stdio by the MCP client SDK (Python 3.12): `initialize` + 8 tools + `ompb_coach` prompt listed; `get_state` / `weekly_load` / `query_log` returned real data; `build_week` rendered the ko card (26 KB) |
 | **Agent SDK app** | ✅ **live end-to-end** — `python -m apps.coach.app "…"` authenticated via the local `claude` CLI (Claude Code subscription, no API key needed), the orchestrator called `mcp__ompb__get_state`, and answered correctly **in Korean** (respecting `config.json` language) |
+| **Discord bot** | ✅ logic + backbone verified (py3.12, discord.py 2.7.1): `route()` / `chunks()` unit-tested, `discord.Client` builds with the message-content intent, and the backing `ask()` returned a correct Korean answer from the real log. The gateway connect needs a bot token (manual, outside this box). |
 
 Tested in a Python 3.12 venv: `python3.12 -m venv .venv && .venv/bin/pip install "mcp[cli]" claude-agent-sdk fitdecode`.
 
@@ -117,9 +142,11 @@ Tested in a Python 3.12 venv: `python3.12 -m venv .venv && .venv/bin/pip install
 
 ## On the map (not built yet — kept in mind)
 
-- **End-user surfaces** (the real market — runners aren't in a terminal): a Strava
-  webhook → auto-ingest + push the weekly card; chat bots (KakaoTalk / Telegram /
-  Discord); a web PWA reusing the self-contained HTML templates. All sit on Surface 2.
+- **End-user surfaces** (the real market — runners aren't in a terminal): the
+  Discord bot above is the first (Surface 3, prototype). Still open: per-user
+  multi-tenancy; a Strava webhook → auto-ingest + push the weekly card; more chat
+  surfaces (KakaoTalk / Telegram); a web PWA reusing the self-contained HTML
+  templates. All sit on Surface 2.
 - **Provider-agnostic adapters** (OpenAI / Gemini / open models): prompts mostly
   transfer, but the limiter-diagnosis reasoning is Claude-tuned — port only after the
   diagnosis quality is re-validated per model (the beta lesson: a bad fitness anchor

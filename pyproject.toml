@@ -17,13 +17,15 @@ dependencies = []  # ompb_core is standard-library only
 fit = ["fitdecode>=0.10.0"]                 # .fit (Garmin/COROS) import
 mcp = ["mcp[cli]>=1.2.0"]                    # MCP server (servers/mcp_server.py)
 agent = ["claude-agent-sdk>=0.1.0"]          # Agent SDK app (apps/coach)
-all = ["fitdecode>=0.10.0", "mcp[cli]>=1.2.0", "claude-agent-sdk>=0.1.0"]
+discord = ["discord.py>=2.3", "claude-agent-sdk>=0.1.0"]  # Discord bot (apps/discord_bot)
+all = ["fitdecode>=0.10.0", "mcp[cli]>=1.2.0", "claude-agent-sdk>=0.1.0", "discord.py>=2.3"]
 
 [project.scripts]
 ompb-coach = "apps.coach.app:main"
+ompb-discord = "apps.discord_bot.bot:main"
 
 [tool.setuptools]
 # ompb_core locates scripts/ + templates/ relative to the repo root, so install
 # editable for now: `pip install -e .[all]`. (Wheel packaging of scripts/templates
 # as package-data is a follow-up.)
-packages = ["ompb_core", "apps", "apps.coach"]
+packages = ["ompb_core", "apps", "apps.coach", "apps.discord_bot"]
