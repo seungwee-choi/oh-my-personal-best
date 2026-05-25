@@ -15,7 +15,28 @@ existing project-local ./.ompb. Plugin *scripts* live under $CLAUDE_PLUGIN_ROOT/
 are invoked by absolute path; this module is imported by sibling scripts (Python puts the
 script's own directory on sys.path when run directly, so `from ompb_env import ...` works).
 """
+import json
 import os
+
+
+def read_config(home):
+    """Read $OMPB_HOME/config.json (app settings, e.g. language). Returns {} if absent/invalid."""
+    p = os.path.join(home, "config.json")
+    if os.path.exists(p):
+        try:
+            with open(p, encoding="utf-8") as fh:
+                return json.load(fh)
+        except (json.JSONDecodeError, OSError):
+            return {}
+    return {}
+
+
+def resolve_lang(explicit, home):
+    """Output/communication language: explicit flag > config.json `language` > 'en'."""
+    if explicit in ("en", "ko"):
+        return explicit
+    lang = read_config(home).get("language")
+    return lang if lang in ("en", "ko") else "en"
 
 
 def resolve_home(explicit=None, create=False):

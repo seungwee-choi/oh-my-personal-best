@@ -165,6 +165,13 @@ When plan-critic approves a plan, the orchestrator writes a timestamped snapshot
 `$OMPB_HOME/plans/plan-<YYYY-MM-DD>.json`. These files are never overwritten, so the full
 history of every approved plan is retained.
 
+## `config.json` (app settings)
+```json
+{ "language": "en" }
+```
+- `language`: `en` | `ko` (default `en`). Set at `/pb-setup`; drives both communication language and the `--lang` of generated artifacts (report, weekly card). Resolution: explicit `--lang` flag → `config.json` `language` → `en`. The runner can change it anytime ("한국어로" / "use English").
+- A home for future settings (units km/mi, timezone, …).
+
 ## Conventions
 - `critic_approved` MUST be `true` before a plan is shown to the runner. `plan-critic` sets it.
 - Weekly volume ramp is capped at ~10%/week unless `plan-critic` explicitly approves an exception.

@@ -22,7 +22,7 @@ import sys
 from collections import Counter, defaultdict
 from datetime import date
 
-from ompb_env import resolve_home
+from ompb_env import resolve_home, resolve_lang
 
 TEMPLATES = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "templates")
 
@@ -146,11 +146,12 @@ def build_report_data(home):
 def main(argv=None):
     ap = argparse.ArgumentParser(description="Render the OMPB athlete report from state.")
     ap.add_argument("--home", help="OMPB_HOME (default: smart-resolve).")
-    ap.add_argument("--lang", choices=["en", "ko"], default="en")
+    ap.add_argument("--lang", choices=["en", "ko"], help="Language (default: config.json language, else en).")
     ap.add_argument("--out", help="Output HTML path (default: <home>/reports/report-<date>.html).")
     args = ap.parse_args(argv)
 
     home = resolve_home(args.home)
+    args.lang = resolve_lang(args.lang, home)
     log = os.path.join(home, "training-log.jsonl")
     if not os.path.exists(log):
         sys.stderr.write(f"error: no training log at {log}. Run /pb-setup or /pb-log first.\n")

@@ -41,6 +41,12 @@ python3 "$CLAUDE_PLUGIN_ROOT/scripts/ompb_env.py" --print-home   # or: import re
 Report to the runner: "Scripts: $CLAUDE_PLUGIN_ROOT/scripts · Data home: <resolved>". If they want a
 specific location, they can `export OMPB_HOME=~/.ompb` before continuing.
 
+## Step 0b — Language
+Ask the runner's preferred language for communication and reports: **English or 한국어**. Write it
+to `$OMPB_HOME/config.json` as `{"language": "en"}` or `{"language": "ko"}` (default `en` if they
+don't care). From here on, respond in that language; report/weekly-card rendering picks it up via
+`--lang` automatically. The runner can change it later by saying "한국어로" / "use English".
+
 ## Step 1 — Dependency check
 `.fit` import needs `fitdecode`. Check:
 ```

@@ -18,7 +18,7 @@ import json
 import os
 import sys
 
-from ompb_env import resolve_home
+from ompb_env import resolve_home, resolve_lang
 
 TEMPLATES = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "templates")
 _QUALITY = {"interval", "tempo"}
@@ -44,12 +44,13 @@ def compute_summary(days):
 def main(argv=None):
     ap = argparse.ArgumentParser(description="Render the OMPB weekly training-plan card.")
     ap.add_argument("--home", help="OMPB_HOME (default: smart-resolve).")
-    ap.add_argument("--lang", choices=["en", "ko"], default="en")
+    ap.add_argument("--lang", choices=["en", "ko"], help="Language (default: config.json language, else en).")
     ap.add_argument("--plan", help="plan-week.json path (default: <home>/plan-week.json).")
     ap.add_argument("--out", help="Output HTML path (default: <home>/weeks/week-<date>.html).")
     args = ap.parse_args(argv)
 
     home = resolve_home(args.home)
+    args.lang = resolve_lang(args.lang, home)
     plan_path = args.plan or os.path.join(home, "plan-week.json")
     if not os.path.exists(plan_path):
         sys.stderr.write(f"error: no weekly plan at {plan_path}. Build one with /pb-plan "
