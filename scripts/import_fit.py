@@ -43,7 +43,7 @@ import warnings
 import zipfile
 from typing import Iterator, Optional, Tuple
 
-from ompb_env import resolve_home, log_path
+from ompb_env import resolve_home, log_path, load_seen, dup_kind, mark_seen
 
 try:
     import fitdecode
@@ -257,21 +257,7 @@ def _iter_zip_paths(zips) -> Iterator[Tuple[str, str]]:
 # CLI
 # ---------------------------------------------------------------------------
 
-def load_seen(path: Optional[str]) -> set:
-    seen = set()
-    if path and os.path.exists(path):
-        with open(path, "r", encoding="utf-8") as fh:
-            for line in fh:
-                line = line.strip()
-                if not line:
-                    continue
-                try:
-                    sid = json.loads(line).get("source_id")
-                    if sid:
-                        seen.add(sid)
-                except json.JSONDecodeError:
-                    continue
-    return seen
+# (de-dup helpers — load_seen / dup_kind / mark_seen — are imported from ompb_env)
 
 
 def main(argv=None) -> int:
@@ -303,23 +289,26 @@ def main(argv=None) -> int:
     seen = load_seen(args.dedup_against or target)
     by_type = {}
     by_sport = {}
-    emitted = files_seen = skipped_dupe = errored = reclassified = 0
+    emitted = files_seen = skipped_dupe = xsrc = errored = reclassified = 0
 
     sink = sys.stdout if args.stdout else open(target, "a", encoding="utf-8")
     try:
         for fit_path, source_id in iter_fit_paths(args.paths):
             files_seen += 1
-            if source_id in seen:
+            if source_id in seen["ids"]:
                 skipped_dupe += 1
                 continue
             try:
                 for entry in parse_fit(fit_path, source_id, tz, args.long_threshold, args.reclassify_generic):
-                    if entry["source_id"] in seen:
+                    dk = dup_kind(seen, entry)
+                    if dk:
                         skipped_dupe += 1
+                        if dk == "cross-source":
+                            xsrc += 1
                         continue
                     line = json.dumps(entry, ensure_ascii=False)
                     json.loads(line)  # integrity guard: never write a line that won't parse back
-                    seen.add(entry["source_id"])
+                    mark_seen(seen, entry)
                     sink.write(line + "\n")
                     emitted += 1
                     by_type[entry["type"]] = by_type.get(entry["type"], 0) + 1
@@ -338,6 +327,8 @@ def main(argv=None) -> int:
             f"# import_fit.py: {files_seen} files, {emitted} activities emitted, "
             f"{skipped_dupe} duplicates skipped, {errored} errored.\n"
         )
+        if xsrc:
+            sys.stderr.write(f"#   of those, {xsrc} were cross-source (same activity already imported from another source)\n")
         if not args.stdout:
             sys.stderr.write(f"#   appended to: {target}\n")
         if reclassified:

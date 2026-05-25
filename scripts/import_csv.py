@@ -43,7 +43,7 @@ import json
 import re
 import sys
 
-from ompb_env import resolve_home, log_path
+from ompb_env import resolve_home, log_path, load_seen, dup_kind, mark_seen
 from datetime import datetime, timezone
 from typing import Dict, List, Optional
 
@@ -339,9 +339,11 @@ def main() -> None:
     home = resolve_home(args.home, create=True)
     target = log_path(home)
     sink = sys.stdout if args.stdout else open(target, "a", encoding="utf-8")
+    seen = load_seen(target)
 
     emitted = 0
     skipped = 0
+    dupes = 0
     try:
         with open(args.file, newline="", encoding="utf-8-sig") as fh:
             reader = csv.DictReader(fh)
@@ -351,13 +353,17 @@ def main() -> None:
             header = list(reader.fieldnames)
             for row in reader:
                 entry = process_row(row, header, logged_at)
-                if entry is not None:
-                    line = json.dumps(entry, ensure_ascii=False)
-                    json.loads(line)  # integrity guard: never write a line that won't parse back
-                    sink.write(line + "\n")
-                    emitted += 1
-                else:
+                if entry is None:
                     skipped += 1
+                    continue
+                if dup_kind(seen, entry):  # already in the log (incl. cross-source by date+distance)
+                    dupes += 1
+                    continue
+                line = json.dumps(entry, ensure_ascii=False)
+                json.loads(line)  # integrity guard: never write a line that won't parse back
+                mark_seen(seen, entry)
+                sink.write(line + "\n")
+                emitted += 1
     except FileNotFoundError:
         print(json.dumps({"error": f"File not found: {args.file}"}), file=sys.stderr)
         sys.exit(1)
@@ -369,7 +375,8 @@ def main() -> None:
             sink.close()
 
     print(
-        f"# import_csv.py: {emitted} activities emitted, {skipped} rows skipped (no date)."
+        f"# import_csv.py: {emitted} activities emitted, {skipped} rows skipped (no date), "
+        f"{dupes} duplicates skipped."
         + ("" if args.stdout else f" appended to: {target}"),
         file=sys.stderr,
     )

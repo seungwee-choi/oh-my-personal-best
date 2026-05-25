@@ -22,7 +22,7 @@ import sys
 from collections import Counter, defaultdict
 from datetime import date
 
-from ompb_env import resolve_home, resolve_lang
+from ompb_env import resolve_home, resolve_lang, star_cta
 
 TEMPLATES = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "templates")
 
@@ -123,6 +123,18 @@ def build_report_data(home):
         y, w, _ = date.fromisoformat(r["date"]).isocalendar(); wk[(y, w)] += D(r)
     recent = [round(wk[k]) for k in sorted(wk)[-10:]]
 
+    # easy-pace HR by half-year (the aerobic-efficiency plateau chart, §06).
+    # Iso-pace easy band 6:00-6:30/km so HR drift over time is comparable.
+    half_hr = defaultdict(list)
+    for r in runs:
+        a = r.get("actual") or {}
+        p, h = pace_to_sec(a.get("pace")), a.get("avg_hr")
+        if p and h and 360 <= p <= 390:
+            yr = int(r["date"][:4]); mo = int(r["date"][5:7])
+            half_hr[(yr, 1 if mo <= 6 else 2)].append(h)
+    easy_hr_by_half = [{"label": f"'{str(yr)[2:]} H{hf}", "hr": round(sum(v) / len(v)), "n": len(v)}
+                       for (yr, hf), v in sorted(half_hr.items()) if len(v) >= 2]
+
     return {
         "athlete": {"label": prof.get("name") or "athlete", "experience": prof.get("experience"),
                     "weekly_mileage_km": prof.get("weekly_mileage_km"),
@@ -136,6 +148,7 @@ def build_report_data(home):
         "intensity_by_hr": by_hr,
         "monthly": monthly,
         "hr_by_pace": hr_by_pace,
+        "easy_hr_by_half": easy_hr_by_half,
         "recent_weeks_km": recent,
         "diagnosis": {"summary": diag.get("summary", ""), "limiter": diag.get("limiter", ""),
                       "observations": diag.get("observations", [])},
@@ -181,6 +194,7 @@ def main(argv=None):
     if not has_diag:
         sys.stderr.write("#   note: no diagnosis.json — run race-analyst first for "
                          "the summary/limiter/findings sections.\n")
+    star_cta(home, args.lang)
     print(out)
     return 0
 

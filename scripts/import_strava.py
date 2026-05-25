@@ -26,7 +26,7 @@ import urllib.parse
 import urllib.request
 from datetime import datetime, timezone
 
-from ompb_env import resolve_home, log_path
+from ompb_env import resolve_home, log_path, resolve_lang, star_cta, load_seen, dup_kind, mark_seen
 
 TOKEN_URL = "https://www.strava.com/oauth/token"
 ACTIVITIES_URL = "https://www.strava.com/api/v3/athlete/activities"
@@ -144,22 +144,6 @@ def to_entry(a, long_threshold):
     }
 
 
-def load_seen(path):
-    seen = set()
-    if os.path.exists(path):
-        with open(path, encoding="utf-8") as fh:
-            for line in fh:
-                line = line.strip()
-                if line:
-                    try:
-                        sid = json.loads(line).get("source_id")
-                        if sid:
-                            seen.add(sid)
-                    except json.JSONDecodeError:
-                        pass
-    return seen
-
-
 def main(argv=None):
     ap = argparse.ArgumentParser(description="Sync Strava activities into the OMPB training log.")
     ap.add_argument("--home", help="OMPB_HOME (default: smart-resolve).")
@@ -197,7 +181,7 @@ def main(argv=None):
 
     seen = load_seen(target)
     sink = sys.stdout if args.stdout else open(target, "a", encoding="utf-8")
-    emitted = skipped = errored = page = 0
+    emitted = skipped = xsrc = errored = page = 0
     by_sport = {}
     try:
         for page in range(1, args.max_pages + 1):
@@ -216,12 +200,15 @@ def main(argv=None):
                 entry = to_entry(a, args.long_threshold)
                 if entry is None:
                     continue
-                if entry["source_id"] in seen:
+                dk = dup_kind(seen, entry)
+                if dk:
                     skipped += 1
+                    if dk == "cross-source":
+                        xsrc += 1
                     continue
                 line = json.dumps(entry, ensure_ascii=False)
                 json.loads(line)  # integrity guard
-                seen.add(entry["source_id"])
+                mark_seen(seen, entry)
                 sink.write(line + "\n")
                 emitted += 1
                 by_sport[entry["sport"]] = by_sport.get(entry["sport"], 0) + 1
@@ -230,9 +217,12 @@ def main(argv=None):
             sink.close()
 
     sys.stderr.write(f"# import_strava.py: {emitted} new activities, {skipped} duplicates skipped"
+                     + (f" ({xsrc} cross-source — same activity already imported from another source)" if xsrc else "")
                      + ("" if args.stdout else f"; appended to {target}") + ".\n")
     if by_sport:
         sys.stderr.write("#   by sport: " + ", ".join(f"{k}={v}" for k, v in sorted(by_sport.items())) + "\n")
+    if emitted and not args.stdout:
+        star_cta(home, resolve_lang(None, home))
     return 0
 
 

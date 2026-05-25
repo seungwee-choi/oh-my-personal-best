@@ -18,7 +18,7 @@ import json
 import os
 import sys
 
-from ompb_env import resolve_home, resolve_lang
+from ompb_env import resolve_home, resolve_lang, star_cta
 
 TEMPLATES = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "templates")
 _QUALITY = {"interval", "tempo"}
@@ -88,6 +88,7 @@ def main(argv=None):
     wk = plan.get("week", {})
     sys.stderr.write(f"# build_week.py: week {wk.get('plan_week','?')}/{wk.get('total_weeks','?')} "
                      f"({plan['summary']['total_km']} km, {plan['summary']['quality']} quality) -> {out}\n")
+    star_cta(home, args.lang)
     print(out)
     return 0
 
