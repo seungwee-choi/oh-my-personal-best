@@ -2,4 +2,5 @@
 # (see setup.py: scripts/ + templates/ are copied into ompb_core/_bundled/).
 recursive-include scripts *.py
 recursive-include templates *.html
+recursive-include agents *.md
 include CLAUDE.md LICENSE README.md README.ko.md
