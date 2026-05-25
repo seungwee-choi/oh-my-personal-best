@@ -103,6 +103,13 @@ Written by `scripts/strava_connect.py` after the one-time OAuth flow; read and u
 `scripts/build_deck.py` writes self-contained HTML slide decks to `$OMPB_HOME/decks/deck-<YYYY-MM-DD>.html`.
 These are derived outputs (regenerable from the log + JSON state); they are gitignored with the rest of `$OMPB_HOME`.
 
+## `reports/` (generated artifacts)
+`scripts/build_report.py` writes comprehensive athlete report HTML to `$OMPB_HOME/reports/report-<YYYY-MM-DD>.html`.
+Each report is print/PDF-ready and fully self-contained (no external dependencies). Rendered from vendored templates
+(`templates/report.html` for English, `templates/report.ko.html` for Korean) that ship with the plugin and carry a
+`__REPORT_DATA__` placeholder that `build_report.py` fills at render time. These are derived outputs; they are
+gitignored with the rest of `$OMPB_HOME`.
+
 ## `plans/` (versioned plan snapshots)
 When plan-critic approves a plan, the orchestrator writes a timestamped snapshot to
 `$OMPB_HOME/plans/plan-<YYYY-MM-DD>.json`. These files are never overwritten, so the full
