@@ -6,9 +6,9 @@
 [![License: MIT](https://img.shields.io/github/license/seungwee-choi/oh-my-personal-best?color=green)](https://github.com/seungwee-choi/oh-my-personal-best/blob/main/LICENSE)
 [![Claude Code Plugin](https://img.shields.io/badge/Claude%20Code-Plugin-d97757)](https://docs.anthropic.com/claude-code)
 
-**마라톤 기록 단축(10K / Half / Full)을 위한 멀티 에이전트 오케스트레이션. 학습 곡선 제로.**
+**수천 km를 달렸습니다. 그 데이터는 당신이 왜 더 빨라지지 않는지 이미 알고 있습니다 — 당신만 못 볼 뿐.**
 
-_러닝을 공부하지 마세요. 그냥 목표 기록만 말하세요._
+_그 모든 기록을 드디어 읽어내는 AI 코치 — 당신의 단 하나의 약점을 찾고, 계획을 짜고, 부상으로 이어지지 않게 막습니다._
 
 [시작하기](#빠른-시작) • [실제 화면](#실제-화면) • [동작 원리](#동작-원리) • [왜 그냥-ai에-안-묻고](#왜-그냥-ai에-안-묻고) • [로드맵](#로드맵)
 
@@ -17,6 +17,8 @@ _러닝을 공부하지 마세요. 그냥 목표 기록만 말하세요._
   <br>
   <em>당신의 한 주를 인쇄용 카드로 — 모든 세션의 페이스·심박 존·구성·목적·코치 노트까지. <code>/pb-week</code>로 생성합니다.</em>
 </p>
+
+Garmin·COROS·Strava에는 당신이 볼 수 없는 답이 가득합니다 — 손으로는 평생 분석 못 할 수천 줄 아래 묻혀서. **oh-my-personal-best**는 당신의 *전체* 훈련 히스토리 — 모든 페이스, 심박 드리프트, 정체 구간 — 를 읽어 당신을 붙잡는 단 하나의 제한 요인을 짚고, 그 주위로 주기화된 계획을 만듭니다. 월 20만 원짜리 코치가 해주는 엘리트급 분석을, 당신의 터미널에서. **쌓아둔 데이터를 묵혀두지 마세요.**
 
 ---
 
