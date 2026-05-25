@@ -10,6 +10,10 @@ __pycache__/
 .venv/
 venv/
 *.egg-info/
+build/
+dist/
+# Build-time copy of scripts/ + templates/ into the package (repo root is the source of truth)
+ompb_core/_bundled/
 
 # OS / editor
 .DS_Store

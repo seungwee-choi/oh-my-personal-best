@@ -23,7 +23,9 @@ all = ["fitdecode>=0.10.0", "mcp[cli]>=1.2.0", "claude-agent-sdk>=0.1.0"]
 ompb-coach = "apps.coach.app:main"
 
 [tool.setuptools]
-# ompb_core locates scripts/ + templates/ relative to the repo root, so install
-# editable for now: `pip install -e .[all]`. (Wheel packaging of scripts/templates
-# as package-data is a follow-up.)
+# scripts/ + templates/ are bundled into ompb_core/_bundled/ at build time (setup.py),
+# so wheels are self-contained: `pip install .` or editable `pip install -e .[all]`.
 packages = ["ompb_core", "apps", "apps.coach"]
+
+[tool.setuptools.package-data]
+ompb_core = ["_bundled/scripts/*.py", "_bundled/templates/*.html"]
