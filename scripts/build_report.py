@@ -64,6 +64,20 @@ def fp(x):
     return f"{int(x) // 60}:{int(x) % 60:02d}" if x else None
 
 
+def as_text(v):
+    """Coerce a diagnosis field to a display string (defensive: race-analyst sometimes
+    emits a nested object/list where STATE-SCHEMA requires a string). Never raise."""
+    if v is None:
+        return ""
+    if isinstance(v, str):
+        return v
+    if isinstance(v, list):
+        return " ".join(as_text(x) for x in v)
+    if isinstance(v, dict):
+        return " ".join(as_text(x) for x in v.values())
+    return str(v)
+
+
 def build_report_data(home):
     rows = load_log(os.path.join(home, "training-log.jsonl"))
     runs = [r for r in rows if r.get("sport") == "running"]
@@ -150,8 +164,8 @@ def build_report_data(home):
         "hr_by_pace": hr_by_pace,
         "easy_hr_by_half": easy_hr_by_half,
         "recent_weeks_km": recent,
-        "diagnosis": {"summary": diag.get("summary", ""), "limiter": diag.get("limiter", ""),
-                      "observations": diag.get("observations", [])},
+        "diagnosis": {"summary": as_text(diag.get("summary")), "limiter": as_text(diag.get("limiter")),
+                      "observations": [as_text(o) for o in (diag.get("observations") or [])]},
         "_has_diagnosis": bool(diag.get("summary")),
     }
 

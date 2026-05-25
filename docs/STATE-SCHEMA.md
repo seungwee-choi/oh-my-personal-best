@@ -122,6 +122,8 @@ shapes. Times are stored as `HH:MM:SS` or `MM:SS` strings; paces as `MM:SS` per 
   "generated_at": "ISO-8601"
 }
 ```
+- `summary`, `limiter`, and `feasibility` MUST be plain strings. `observations` MUST be a list of strings. Downstream renderers (`build_report.py`) perform string operations on all four fields — writing any of them as a nested object or list will cause rendering errors.
+- If richer structure is useful, put it under an optional `detail` object key. Never make the three core fields objects.
 
 ## `strava.json` (Strava credentials — secrets, never commit)
 Written by `scripts/strava_connect.py` after the one-time OAuth flow; read and updated (access token refresh) by `scripts/import_strava.py`. File permissions are set to 600 by the connect script.

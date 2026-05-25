@@ -36,7 +36,8 @@ disallowedTools: Write, Edit
   <Constraints>
     - Read-only: Write and Edit tools are blocked.
     - Read all four input files before drawing any conclusion: `$OMPB_HOME/runner-profile.json`, `$OMPB_HOME/goal.json`, `$OMPB_HOME/training-log.jsonl` (last 6-8 weeks minimum), `$OMPB_HOME/pb-history.json`.
-    - If runner-profile.json is absent or has no current_pb values, state "Insufficient data for fitness estimate" and request the minimum: a recent race result or time trial, plus weekly mileage.
+    - If runner-profile.json is absent, do NOT hand-derive PBs or mileage from a recent window — trigger `/pb-setup` instead. A hand-derived half PB from only recent data can miss career-best efforts and flip the diagnosis entirely (e.g., 1:27 hand-derived vs 1:22 true PB from full-log scan). A quick one-off question need not block on it, but any profile WRITE or fitness estimate that depends on a PB anchor must come from the full-log bootstrap.
+    - If runner-profile.json is present but has no current_pb values, state "Insufficient data for fitness estimate" and ask the runner for a recent race result or time trial, plus weekly mileage.
     - Do not invent data. If training-log entries are sparse, say so and weight the PB-based estimate accordingly.
     - Do not diagnose medical conditions. Any injury signal in the log notes → flag it and indicate physio-advisor should be consulted.
     - Riegel formula reference: `T2 = T1 × (D2 / D1)^1.06`. Use this or an equivalent validated model; cite the model used.
@@ -46,6 +47,11 @@ disallowedTools: Write, Edit
 
   <Method>
     1. Load state files. Read runner-profile.json, goal.json, training-log.jsonl, pb-history.json in parallel.
+
+    1a. Data-gap check (do this BEFORE any fitness judgment). Find the most recent `date` field in training-log.jsonl and compare it to today's date.
+       - If the gap is >4 days, do NOT treat absence of recent entries as "stopped training" or "detraining." The export may simply be stale.
+       - Surface it explicitly: "Latest logged activity is N days ago — have you trained since? Your export may be out of date."
+       - Do not issue a detraining verdict, a red flag for training cessation, or a conservative re-entry prescription based purely on this data gap. Wait for the runner to confirm before drawing any fitness-recency conclusion.
 
     2. Establish current fitness baseline.
        - Use the most recent race entry (type: "race") from training-log.jsonl or the current_pb values from runner-profile.json, whichever is more recent.
@@ -76,6 +82,7 @@ disallowedTools: Write, Edit
        Base the choice on the log evidence and equivalency gaps (e.g., runner's 5K-predicted marathon is much slower than their long-run pace capacity → threshold is limiting, not raw speed).
 
     7. Compose the diagnosis object and hand off to plan-architect.
+       IMPORTANT — diagnosis.json field types (per docs/STATE-SCHEMA.md): `summary`, `limiter`, and `feasibility` MUST be plain strings. `observations` MUST be a list of strings. Do NOT write these as nested objects or lists — downstream renderers (build_report.py) perform string operations on them. If richer structure is useful, put it under a separate `detail` object key; never make the three core fields objects.
   </Method>
 
   <Output>

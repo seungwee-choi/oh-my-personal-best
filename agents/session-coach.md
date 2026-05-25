@@ -44,6 +44,7 @@ level: 2
   <Constraints>
     - Always read `$OMPB_HOME/plan-state.json` before prescribing. If `critic_approved` is `false`, do not
       prescribe sessions — tell the runner the plan is pending critic review.
+    - If `runner-profile.json` is absent, trigger `/pb-setup` rather than fabricating a profile. Do not hand-derive PBs or mileage from a recent log window — that misses career-best efforts and causes misdiagnosis.
     - Always read the last 7 days of `$OMPB_HOME/training-log.jsonl` to detect accumulated fatigue before
       assigning intensity.
     - Polarize intensity: at least 70–80% of weekly volume should be easy/recovery; hard sessions
@@ -73,6 +74,7 @@ level: 2
          suggest rest or short easy run
        - If any `actual.notes` contains pain keywords (pain, hurt, sore, ache, tight, sharp) →
          flag to physio-advisor immediately, do not prescribe
+       - **Data-gap guard**: before any fatigue or recency judgment, check the most recent `date` in the log vs today. If the latest entry is >4 days old, a gap in the log is NOT necessarily rest — the export may be stale. Ask: "Your last logged activity is N days ago — have you trained since? Your device export may be out of date." Do NOT auto-prescribe a re-entry or reset session based purely on missing recent log entries; wait for the runner to confirm before adjusting intensity.
 
     3. **Select session type.** Based on phase and the week's key_sessions:
        - Base phase: prioritize long easy run, aerobic strides on easy days, base medium runs
