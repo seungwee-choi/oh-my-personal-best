@@ -29,6 +29,7 @@ import json
 import os
 import sys
 import threading
+import urllib.error
 import urllib.parse
 import urllib.request
 import webbrowser
@@ -72,8 +73,14 @@ class _Handler(http.server.BaseHTTPRequestHandler):
 def _post_token(params):
     data = urllib.parse.urlencode(params).encode()
     req = urllib.request.Request(TOKEN_URL, data=data, method="POST")
-    with urllib.request.urlopen(req, timeout=30) as resp:
-        return json.loads(resp.read().decode())
+    try:
+        with urllib.request.urlopen(req, timeout=30) as resp:
+            return json.loads(resp.read().decode())
+    except urllib.error.HTTPError as e:  # Strava returns a JSON error body even on 401
+        try:
+            return json.loads(e.read().decode())
+        except Exception:
+            return {"error": f"HTTP {e.code}"}
 
 
 def main(argv=None):
@@ -128,6 +135,9 @@ def main(argv=None):
     })
     if "refresh_token" not in tok:
         sys.stderr.write(f"error: token exchange failed: {tok}\n")
+        sys.stderr.write("#   likely cause: Client ID/Secret mismatch, or the app's Authorization "
+                         "Callback Domain is not exactly 'localhost'. Re-check at "
+                         "https://www.strava.com/settings/api and retry.\n")
         return 1
 
     home = resolve_home(args.home, create=True)

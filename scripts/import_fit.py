@@ -19,7 +19,8 @@ parsed with the standard library alone.
 
 Usage:
     python3 import_fit.py <path...> [options]      paths: .fit | .zip | directory
-    python3 import_fit.py ~/coros/ --dedup-against .ompb/training-log.jsonl >> .ompb/training-log.jsonl
+    python3 import_fit.py ~/coros/ --tz Asia/Seoul      # appends directly to the resolved home log
+    # (use --stdout to emit JSONL to stdout instead of writing the home log)
 
 Options:
     --tz <name>               Local timezone for the activity date (default: system local).

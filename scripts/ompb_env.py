@@ -51,6 +51,11 @@ def resolve_home(explicit=None, create=False):
         cwd_home = os.path.abspath("./.ompb")
         if os.path.isdir(user_home):
             home = user_home
+            if os.path.isdir(cwd_home) and cwd_home != user_home:
+                sys.stderr.write(
+                    f"# warning: using {user_home}, but {cwd_home} also exists and is being "
+                    f"ignored. Set OMPB_HOME (e.g. `export OMPB_HOME={cwd_home}`) to choose, "
+                    f"or merge the two homes.\n")
         elif os.path.isdir(cwd_home):
             home = cwd_home
         else:

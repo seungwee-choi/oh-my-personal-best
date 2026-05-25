@@ -48,8 +48,14 @@ def _get_json(url, token=None):
 
 def _post(url, params):
     data = urllib.parse.urlencode(params).encode()
-    with urllib.request.urlopen(urllib.request.Request(url, data=data, method="POST"), timeout=30) as resp:
-        return json.loads(resp.read().decode())
+    try:
+        with urllib.request.urlopen(urllib.request.Request(url, data=data, method="POST"), timeout=30) as resp:
+            return json.loads(resp.read().decode())
+    except urllib.error.HTTPError as e:  # Strava returns a JSON error body even on 401
+        try:
+            return json.loads(e.read().decode())
+        except Exception:
+            return {"error": f"HTTP {e.code}"}
 
 
 def get_access_token(cred, cred_path):
@@ -64,7 +70,8 @@ def get_access_token(cred, cred_path):
         "refresh_token": cred["refresh_token"],
     })
     if "access_token" not in tok:
-        raise RuntimeError(f"token refresh failed: {tok}")
+        raise RuntimeError(f"token refresh failed: {tok}. Re-check your Client ID/Secret at "
+                           "https://www.strava.com/settings/api, then re-run strava_connect.py.")
     cred["access_token"] = tok["access_token"]
     cred["expires_at"] = tok.get("expires_at")
     if tok.get("refresh_token"):

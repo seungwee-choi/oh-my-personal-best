@@ -31,6 +31,14 @@ goal; the pipeline does the rest.
 
 <Steps>
 
+## Step 0 — Disambiguate when invoked with no goal + an approved plan already exists
+If no goal text was given AND `$OMPB_HOME/plan-state.json` already exists with `critic_approved: true`,
+do NOT silently rebuild from scratch. First ask the runner which they want:
+- **Adjust this week** → `weekly-adapt` (keep the plan, tune the current week).
+- **Change the goal / rebuild** → continue this skill with the new goal (or confirm the existing one).
+- **Just view it** → render via `/pb-week` (this week) or `/pb-report`.
+Only proceed to a full rebuild once the runner confirms a new/changed goal.
+
 ## Step 1 — Ensure Runner State Exists
 
 Load `$OMPB_HOME/runner-profile.json` and `$OMPB_HOME/goal.json`.

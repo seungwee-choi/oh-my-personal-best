@@ -28,11 +28,15 @@ shapes. Times are stored as `HH:MM:SS` or `MM:SS` strings; paces as `MM:SS` per 
   "event": "10k | half | full",
   "target_time": "H:MM:SS",
   "race_date": "YYYY-MM-DD",
+  "race_date_estimated": false,
+  "race_date_note": "string",
   "weeks_remaining": 0,
   "race_name": "string",
   "created_at": "ISO-8601"
 }
 ```
+- `race_date_estimated`: `true` when the date is inferred (official date unannounced), `false` when confirmed. `weeks_remaining` and the peak/taper placement depend on it.
+- `race_date_note`: free text, e.g. "estimated: 4th Sunday of October — re-align when official". When the date is confirmed, set `race_date`, flip `race_date_estimated` to `false`, recompute `weeks_remaining`, and re-run the plan (plan-critic re-gate).
 
 ## `training-log.jsonl` (append-only, one JSON object per line)
 ```json
