@@ -237,3 +237,19 @@ def build_week(home: Optional[str] = None, lang: Optional[str] = None,
         args += ["--out", out]
     proc = _run("build_week.py", args, home)
     return (proc.stdout or "").strip().splitlines()[-1]
+
+
+def export_report(home: Optional[str] = None, fmt: str = "pdf", lang: Optional[str] = None,
+                  out: Optional[str] = None, html: Optional[str] = None) -> str:
+    """Render the analysis report to a static artifact (``fmt`` = "pdf" | "png") via a
+    headless browser. Returns the output path. Raises OMPBError if no browser is found.
+    Lets surfaces deliver a clean file without re-implementing browser plumbing."""
+    args: List[str] = ["--fmt", fmt]
+    if lang:
+        args += ["--lang", lang]
+    if out:
+        args += ["--out", out]
+    if html:
+        args += ["--html", html]
+    proc = _run("export_report.py", args, home)
+    return (proc.stdout or "").strip().splitlines()[-1]
