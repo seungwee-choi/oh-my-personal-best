@@ -470,15 +470,23 @@ table.pb td.note { color: var(--ink-2); font-size: 13px; }
 }
 
 /* ---------- Print ---------- */
-@page { size: A4; margin: 14mm 14mm; }
+@page { size: A4; margin: 12mm 12mm; }
 @media print {
-  html, body { background: #fff; }
+  html, body { background: #fff; font-size: 13.5px; }
   .shell { box-shadow: none; margin: 0; max-width: none; }
   .page { padding: 0; }
-  .section { break-inside: avoid; padding: 22px 0; }
+  .section { padding: 16px 0; }
   .pagebreak { break-after: page; }
   h2 { break-after: avoid; }
-  .kpi { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  h1 { font-size: 40px; }
+  /* Chrome zeroes percent-width SVGs inside a CSS grid when printing — stack grids to a
+     single column so each chart resolves a real width, and cap sizes so they don't balloon. */
+  .col-2, .col-3, .donut-row { display: block; }
+  .col-2 > * + *, .col-3 > * + *, .donut-row > * + * { margin-top: 18px; }
+  .chart { max-width: 660px; margin-inline: auto; }
+  #chart-donut { max-width: 220px; }
+  /* keep visual units whole across A4 page breaks */
+  .section, .chart, .finding, .kpi, .limiter, .rec, .donut-row, .strip, .pull { break-inside: avoid; }
   * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
 }
 
@@ -583,8 +591,8 @@ const scale = (d0, d1, r0, r1) => (v) => r0 + (v - d0) / (d1 - d0) * (r1 - r0);
 
 // Generate SVG markup string. We use template literals for clarity & smaller output.
 function chartMonthlyVolume(data, totals) {
-  const W = 760, H = 280;
-  const pad = { l: 42, r: 18, t: 14, b: 36 };
+  const W = 760, H = 300;
+  const pad = { l: 42, r: 18, t: 48, b: 36 };  // top headroom so the PEAK label isn't clipped
   const innerW = W - pad.l - pad.r;
   const innerH = H - pad.t - pad.b;
 
@@ -668,7 +676,7 @@ function chartMonthlyVolume(data, totals) {
 
 function chartMonthlyLine(data, key, opts) {
   const W = 360, H = 200;
-  const pad = { l: 36, r: 12, t: 16, b: 28 };
+  const pad = { l: 40, r: 14, t: 16, b: 28 };
   const innerW = W - pad.l - pad.r;
   const innerH = H - pad.t - pad.b;
 
@@ -706,13 +714,17 @@ function chartMonthlyLine(data, key, opts) {
     dots += `<circle cx="${x(i).toFixed(1)}" cy="${y(v).toFixed(1)}" r="2.2" fill="${PAL.paper}" stroke="${opts.color}" stroke-width="1.4"/>`;
   });
 
-  // x labels
-  let xlabels = '';
+  // x labels — year boundaries + endpoints, suppressing any that would crowd a neighbor
+  // (fixes the first tick colliding with the next label, e.g. "5월'24" over "7월'24")
+  let xlabels = '', lastLabelX = -1e9;
   data.forEach((d, i) => {
     const [yy, mm] = d.month.split('-');
-    if (mm === '01' || mm === '07' || i === 0 || i === data.length - 1) {
-      xlabels += `<text x="${x(i)}" y="${H - pad.b + 12}" text-anchor="middle" font-family="ui-monospace, Menlo, monospace" font-size="9" fill="${PAL.muted}">${fmt.monthShort(d.month)} '${yy.slice(2)}</text>`;
-    }
+    if (!(mm === '01' || mm === '07' || i === 0)) return;  // year marks + start (final dot is highlighted)
+    const xi = x(i);
+    if (xi - lastLabelX < 38) return;   // too close to the previous label → skip
+    lastLabelX = xi;
+    const anchor = i === 0 ? 'start' : 'middle';
+    xlabels += `<text x="${xi}" y="${H - pad.b + 12}" text-anchor="${anchor}" font-family="ui-monospace, Menlo, monospace" font-size="9" fill="${PAL.muted}">${fmt.monthShort(d.month)} '${yy.slice(2)}</text>`;
   });
 
   // trend marker - last value annotation
@@ -1244,10 +1256,12 @@ function render(D) {
    Component HTML helpers
    ========================================================= */
 function kpiHTML(label, value, sub, unit) {
+  const v = (value === undefined || value === null || value === '') ? '—' : value;
+  const u = (v === '—') ? '' : unit;  // no unit on an absent value
   return `
     <div class="kpi">
       <div class="lbl">${label}</div>
-      <div class="val">${value}${unit ? ` <span class="u">${unit}</span>` : ''}</div>
+      <div class="val">${v}${u ? ` <span class="u">${u}</span>` : ''}</div>
       ${sub ? `<div class="sub">${sub}</div>` : ''}
     </div>`;
 }

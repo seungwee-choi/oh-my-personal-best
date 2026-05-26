@@ -30,6 +30,7 @@ from .core import (
     sync_strava,
     build_report,
     build_week,
+    export_report,
 )
 
 __all__ = [
@@ -44,6 +45,7 @@ __all__ = [
     "sync_strava",
     "build_report",
     "build_week",
+    "export_report",
 ]
 
 __version__ = "0.1.0"
