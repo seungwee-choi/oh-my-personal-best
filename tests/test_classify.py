@@ -67,6 +67,59 @@ def test_no_signal_is_easy():
     assert classify.refine(_a(distance_km=5), 5.0, {}) == "easy"  # empty ref, no HR/pace
 
 
+def test_name_to_type():
+    assert classify.name_to_type("Tempo 6×1k") == "tempo"
+    assert classify.name_to_type("Track intervals") == "interval"
+    assert classify.name_to_type("Sunday Long Run") == "long"
+    assert classify.name_to_type("recovery shakeout") == "recovery"
+    assert classify.name_to_type("Seoul Marathon race") == "race"
+    assert classify.name_to_type("템포 주행") == "tempo"
+    # plain Strava auto-titles must NOT false-match
+    assert classify.name_to_type("Morning Run") is None
+    assert classify.name_to_type("Afternoon Run") is None
+    assert classify.name_to_type(None) is None
+
+
+# --- Strava importer type mapping (name title > workout_type tag) ----------------
+import import_strava  # noqa: E402
+
+
+def _act(**kw):
+    base = {"id": 1, "distance": 10000, "average_speed": 3.7, "moving_time": 3000,
+            "start_date_local": "2026-05-01T07:00:00Z", "sport_type": "Run", "has_heartrate": False}
+    base.update(kw)
+    return base
+
+
+def test_strava_name_title_wins():
+    e = import_strava.to_entry(_act(name="Tempo 6x1k"), 19.0)
+    assert e["type"] == "tempo" and e.get("type_source") == "name"
+
+
+def test_strava_workout_type_tags():
+    assert import_strava.to_entry(_act(workout_type=1, name="Morning Run"), 19.0)["type"] == "race"
+    long_e = import_strava.to_entry(_act(workout_type=2, distance=8000, name="Morning Run"), 19.0)
+    assert long_e["type"] == "long" and long_e.get("type_source") == "strava"  # tag overrides distance
+    # workout (3) with no HR → tempo (tagged quality, can't refine); with HR → left for reclassify
+    no_hr = import_strava.to_entry(_act(workout_type=3, name="Morning Run", has_heartrate=False), 19.0)
+    assert no_hr["type"] == "tempo" and no_hr.get("type_source") == "strava"
+    with_hr = import_strava.to_entry(
+        _act(workout_type=3, name="Morning Run", has_heartrate=True, average_heartrate=150, max_heartrate=178), 19.0)
+    assert with_hr["type"] == "easy" and "type_source" not in with_hr  # reclassify (HR) decides
+
+
+def test_strava_plain_and_distance():
+    assert import_strava.to_entry(_act(name="Morning Run", distance=22000), 19.0)["type"] == "long"
+    plain = import_strava.to_entry(_act(name="Morning Run"), 19.0)
+    assert plain["type"] == "easy" and "type_source" not in plain
+
+
+def test_strava_name_override_runs_only():
+    # a non-run named "intervals" stays cross — title override is running-only
+    e = import_strava.to_entry(_act(sport_type="Ride", name="interval session"), 19.0)
+    assert e["sport"] == "cycling" and e["type"] == "cross" and "type_source" not in e
+
+
 if __name__ == "__main__":
     for name, fn in sorted(globals().items()):
         if name.startswith("test_") and callable(fn):
