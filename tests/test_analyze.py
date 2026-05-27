@@ -93,6 +93,56 @@ def test_strava_detail_adapter_to_engine():
     assert r["structure"] == "interval" and len(r["reps"]) == 6
 
 
+# --- stream analysis (decoupling / zones / hard efforts) ------------------------
+
+def _streams(hr, vel, t=None):
+    return {"heartrate": hr, "velocity": vel, "time": t or list(range(len(hr)))}
+
+
+def test_decoupling_drift():
+    n = 1500  # 25 min so there's ≥15 min of post-warmup steady data
+    vel = [3.0] * (n // 2) + [2.7] * (n - n // 2)   # slows for the same HR
+    r = analyze.analyze_streams(_streams([150] * n, vel))
+    assert r["decoupling_pct"] > 5 and "high aerobic decoupling" in r["decoupling_note"]
+
+
+def test_well_coupled():
+    r = analyze.analyze_streams(_streams([150] * 1500, [3.0] * 1500))
+    assert abs(r["decoupling_pct"]) < 2
+
+
+def test_decoupling_skipped_when_too_short():
+    # a 5-min run is all warm-up → decoupling not reported (no false durability signal)
+    r = analyze.analyze_streams(_streams([150] * 300, [3.0] * 300))
+    assert "decoupling_pct" not in r
+
+
+def test_time_in_zone():
+    r = analyze.analyze_streams(_streams([150] * 300, [3.0] * 300), hrmax=190)  # 150/190=0.79 → Z3
+    assert r["time_in_zone_pct"]["Z3"] >= 90
+
+
+def test_hard_efforts_count():
+    hr = []
+    for _ in range(3):
+        hr += [120] * 60 + [171] * 70   # easy, then a ≥45s Z5 bout
+    hr += [120] * 60
+    r = analyze.analyze_streams(_streams(hr, [3.0] * len(hr)), hrmax=190)
+    assert r["hard_efforts"] == 3
+
+
+def test_streams_too_short_noop():
+    assert analyze.analyze_streams(_streams([150] * 10, [3.0] * 10)) == {}
+
+
+def test_strava_streams_adapter():
+    import import_strava
+    data = {"time": {"data": [0, 1, 2]}, "heartrate": {"data": [150, 151, 152]},
+            "velocity_smooth": {"data": [3.0, 3.1, 3.0]}, "distance": {"data": [0, 3, 6]}}
+    s = import_strava._streams_from_data(data)
+    assert s["heartrate"] == [150, 151, 152] and s["velocity"] == [3.0, 3.1, 3.0]
+
+
 if __name__ == "__main__":
     for name, fn in sorted(globals().items()):
         if name.startswith("test_") and callable(fn):

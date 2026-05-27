@@ -57,6 +57,86 @@ def _rep_summary(work: List[dict]) -> str:
     return f"{len(work)} × {dist} @ {_fp(pace)}/km{hr}"
 
 
+def _smooth(xs: List[Optional[float]], w: int = 15) -> List[Optional[float]]:
+    """Centered moving average (window w), skipping None — tames per-second GPS/HR noise."""
+    n = len(xs)
+    out: List[Optional[float]] = []
+    for i in range(n):
+        seg = [x for x in xs[max(0, i - w // 2):min(n, i + w // 2 + 1)] if x is not None]
+        out.append(sum(seg) / len(seg) if seg else None)
+    return out
+
+
+def _zone_idx(hr: float, hrmax: float) -> int:
+    """5-zone index by %HRmax: Z1<60 Z2 60–70 Z3 70–80 Z4 80–90 Z5 ≥90."""
+    f = hr / hrmax
+    for i, edge in enumerate((0.60, 0.70, 0.80, 0.90)):
+        if f < edge:
+            return i
+    return 4
+
+
+def analyze_streams(streams: dict, hrmax: Optional[float] = None) -> Dict:
+    """Per-second stream metrics that laps can't give: aerobic decoupling (Pa:HR drift),
+    time-in-HR-zone, and a stream-derived count of hard efforts (resolves auto-lap
+    structure ambiguity). ``streams`` = parallel arrays {time, heartrate, velocity}.
+    Returns only what the data supports (decoupling needs HR+velocity; zones/efforts need hrmax)."""
+    hr = streams.get("heartrate") or []
+    vel = streams.get("velocity") or []
+    t = streams.get("time")
+    n = min(len(hr), len(vel)) if (hr and vel) else 0
+    out: Dict = {}
+    if n < 60:
+        return out
+
+    moving = [i for i in range(n) if vel[i] and vel[i] > 0.5 and hr[i]]
+    # Aerobic decoupling: efficiency = avg-speed / avg-HR per half; does it fade 1st→2nd? (>5% =
+    # drift). Use ratio-of-means (stable vs per-sample noise), and only for a STEADY effort —
+    # on intervals/stop-go runs the halves differ by structure, not drift, so it's not meaningful.
+    if len(moving) >= 120:
+        mvel = [vel[i] for i in moving]
+        vcv = statistics.pstdev(mvel) / statistics.mean(mvel) if statistics.mean(mvel) else 1
+        # Drop the first ~5 min (cold-start HR ramp inflates first-half efficiency).
+        t0 = t[moving[0]] if (t and t[moving[0]] is not None) else None
+        steady = [i for i in moving if t0 is not None and t[i] is not None and t[i] - t0 >= 300] or moving[len(moving) // 6:]
+        dur = (t[steady[-1]] - t[steady[0]]) if (t and steady and t[steady[-1]] is not None) else len(steady)
+        if vcv < 0.25 and len(steady) >= 120 and dur >= 900:  # steady, post-warmup, ≥15 min
+            half = len(steady) // 2
+            ef1 = statistics.mean(vel[i] for i in steady[:half]) / statistics.mean(hr[i] for i in steady[:half])
+            ef2 = statistics.mean(vel[i] for i in steady[half:]) / statistics.mean(hr[i] for i in steady[half:])
+            dec = round((ef1 - ef2) / ef1 * 100, 1) if ef1 else 0.0
+            out["decoupling_pct"] = dec
+            out["decoupling_note"] = ("high aerobic decoupling (>5%) — durability/fueling/heat limiter"
+                                      if dec > 5 else "well-coupled — aerobically durable for this effort")
+
+    if hrmax and hr:
+        secs = [0.0] * 5
+        for i in range(n):
+            if not hr[i]:
+                continue
+            dt = (t[i] - t[i - 1]) if (t and i > 0 and t[i] and t[i - 1]) else 1
+            dt = 1 if (dt <= 0 or dt > 30) else dt  # guard pauses/gaps
+            secs[_zone_idx(hr[i], hrmax)] += dt
+        total = sum(secs) or 1
+        out["time_in_zone_s"] = {f"Z{i + 1}": int(secs[i]) for i in range(5)}
+        out["time_in_zone_pct"] = {f"Z{i + 1}": round(secs[i] / total * 100) for i in range(5)}
+
+        # Hard efforts: smoothed HR sustained in Z4+ (≥0.85·HRmax) for ≥45s. A continuous
+        # tempo → 1 bout; N×reps → ~N bouts — corroborates/sharpens the lap structure.
+        sm = _smooth([h if h else None for h in hr], 15)
+        floor = 0.85 * hrmax
+        bouts, run = 0, 0
+        for i in range(n):
+            hot = sm[i] is not None and sm[i] >= floor
+            dt = (t[i] - t[i - 1]) if (t and i > 0 and t[i] and t[i - 1]) else 1
+            dt = 1 if (dt <= 0 or dt > 30) else dt
+            run = run + dt if hot else 0
+            if hot and run - dt < 45 <= run:  # crossed the 45s sustain threshold → new bout
+                bouts += 1
+        out["hard_efforts"] = bouts
+    return out
+
+
 def analyze_laps(laps: List[dict], distance_km: Optional[float] = None,
                  long_km: float = 19.0) -> Dict:
     """Analyze one activity's lap structure. Returns structure, reps, pacing, and a

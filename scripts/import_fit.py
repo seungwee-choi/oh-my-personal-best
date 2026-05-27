@@ -229,6 +229,31 @@ def laps_from_fit(path: str):
     return laps, (round(total, 3) if total else None)
 
 
+def streams_from_fit(path: str) -> dict:
+    """Per-second streams from `record` messages: {time[s], heartrate, velocity[m/s], distance[m]}.
+    For analyze.analyze_streams (decoupling / time-in-zone / hard efforts). Offline."""
+    times, hr, vel, dist = [], [], [], []
+    t0 = None
+    with fitdecode.FitReader(path) as fr:
+        for frame in fr:
+            if isinstance(frame, fitdecode.FitDataMessage) and frame.name == "record":
+                ts = _get(frame, "timestamp")
+                sec = None
+                if ts is not None and hasattr(ts, "timestamp"):
+                    epoch = ts.timestamp()
+                    if t0 is None:
+                        t0 = epoch
+                    sec = epoch - t0
+                spd = _get(frame, "enhanced_speed")
+                if spd is None:
+                    spd = _get(frame, "speed")
+                times.append(sec)
+                hr.append(_get(frame, "heart_rate"))
+                vel.append(spd)
+                dist.append(_get(frame, "distance"))
+    return {"time": times, "heartrate": hr, "velocity": vel, "distance": dist}
+
+
 def parse_fit(path: str, source_id: str, tz, long_threshold: float,
               reclassify_generic: bool = True) -> Iterator[dict]:
     """Yield one entry per `session` message in a .fit file."""
