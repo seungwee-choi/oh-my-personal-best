@@ -206,6 +206,30 @@ def laps_from_strava(activity_id, home=None):
     return _laps_from_detail(detail)
 
 
+def _streams_from_data(data: dict) -> dict:
+    """Normalize Strava's key_by_type streams response → {time, heartrate, velocity, distance}."""
+    def col(k):
+        return (data.get(k) or {}).get("data")
+    return {"time": col("time"), "heartrate": col("heartrate"),
+            "velocity": col("velocity_smooth"), "distance": col("distance")}
+
+
+def laps_from_strava_streams(activity_id, home=None):
+    """Fetch per-second streams for one activity (1 API call). Returns the normalized dict
+    (see _streams_from_data). On-demand single-activity only — never bulk."""
+    aid = str(activity_id).replace("strava-", "")
+    home = resolve_home(home)
+    cred_path = os.path.join(home, "strava.json")
+    if not os.path.exists(cred_path):
+        raise RuntimeError(f"{cred_path} not found — run strava_connect.py first.")
+    with open(cred_path, encoding="utf-8") as fh:
+        cred = json.load(fh)
+    token = get_access_token(cred, cred_path)
+    url = (f"https://www.strava.com/api/v3/activities/{aid}/streams"
+           "?keys=time,heartrate,velocity_smooth,distance&key_by_type=true")
+    return _streams_from_data(_get_json(url, token))
+
+
 def main(argv=None):
     ap = argparse.ArgumentParser(description="Sync Strava activities into the OMPB training log.")
     ap.add_argument("--home", help="OMPB_HOME (default: smart-resolve).")
