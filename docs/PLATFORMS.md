@@ -37,6 +37,8 @@ ompb.sync_strava(after="2026-01-01")   # auto-refreshes the stored token
 ompb.build_report(lang="ko")           # -> path to self-contained HTML
 ompb.build_week(lang="ko")             # -> path to the weekly card
 ompb.export_report(fmt="pdf")          # -> static PDF/PNG via a headless browser
+ompb.reclassify()                      # calibrated re-typing of the whole log
+ompb.analyze_activity("strava-123")    # one activity: structure/reps/pacing (.fit path too)
 ```
 
 Read paths import the script helpers in-process; write/render paths invoke the

@@ -173,6 +173,39 @@ def to_entry(a, long_threshold):
     return entry
 
 
+def _laps_from_detail(detail: dict):
+    """Normalize a Strava activity-detail dict's `laps` → (laps, total_km) for analyze.py."""
+    laps = []
+    for lp in detail.get("laps") or []:
+        d = lp.get("distance")
+        spd = lp.get("average_speed")
+        dur = lp.get("moving_time") or lp.get("elapsed_time")
+        laps.append({
+            "distance_km": round(d / 1000.0, 3) if d else None,
+            "duration_s": int(dur) if dur else None,
+            "pace_sec": (1000.0 / spd) if spd and spd > 0 else None,
+            "avg_hr": int(lp["average_heartrate"]) if lp.get("average_heartrate") else None,
+            "max_hr": int(lp["max_heartrate"]) if lp.get("max_heartrate") else None,
+        })
+    total = detail.get("distance")
+    return laps, (round(total / 1000.0, 3) if total else None)
+
+
+def laps_from_strava(activity_id, home=None):
+    """Fetch one activity's laps from the Strava detail endpoint (1 API call).
+    Returns (laps, total_km). For on-demand single-activity analysis only — never bulk."""
+    aid = str(activity_id).replace("strava-", "")
+    home = resolve_home(home)
+    cred_path = os.path.join(home, "strava.json")
+    if not os.path.exists(cred_path):
+        raise RuntimeError(f"{cred_path} not found — run strava_connect.py first.")
+    with open(cred_path, encoding="utf-8") as fh:
+        cred = json.load(fh)
+    token = get_access_token(cred, cred_path)
+    detail = _get_json(f"https://www.strava.com/api/v3/activities/{aid}?include_all_efforts=false", token)
+    return _laps_from_detail(detail)
+
+
 def main(argv=None):
     ap = argparse.ArgumentParser(description="Sync Strava activities into the OMPB training log.")
     ap.add_argument("--home", help="OMPB_HOME (default: smart-resolve).")

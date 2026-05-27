@@ -203,6 +203,32 @@ def session_to_entry(msg, source_id: str, tz, long_threshold: float,
     return entry
 
 
+def laps_from_fit(path: str):
+    """Return (laps, total_distance_km) from a .fit file's `lap` messages, for analyze.py.
+
+    Each lap → {distance_km, duration_s, pace_sec, avg_hr, max_hr}. Manual workout laps
+    (varied distances) drive rep detection; auto-laps (≈1 km) the engine flags itself.
+    """
+    laps, total = [], 0.0
+    with fitdecode.FitReader(path) as fr:
+        for frame in fr:
+            if isinstance(frame, fitdecode.FitDataMessage) and frame.name == "lap":
+                dist_m = _get(frame, "total_distance")
+                dur = _get(frame, "total_timer_time") or _get(frame, "total_elapsed_time")
+                spd = _get(frame, "enhanced_avg_speed") or _get(frame, "avg_speed")
+                km = dist_m / 1000.0 if dist_m else None
+                laps.append({
+                    "distance_km": round(km, 3) if km else None,
+                    "duration_s": int(round(dur)) if dur else None,
+                    "pace_sec": (1000.0 / spd) if spd and spd > 0 else None,
+                    "avg_hr": int(_get(frame, "avg_heart_rate")) if _get(frame, "avg_heart_rate") else None,
+                    "max_hr": int(_get(frame, "max_heart_rate")) if _get(frame, "max_heart_rate") else None,
+                })
+                if km:
+                    total += km
+    return laps, (round(total, 3) if total else None)
+
+
 def parse_fit(path: str, source_id: str, tz, long_threshold: float,
               reclassify_generic: bool = True) -> Iterator[dict]:
     """Yield one entry per `session` message in a .fit file."""

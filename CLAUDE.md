@@ -96,6 +96,8 @@ Input paths normalize to the same `training-log` schema (`data-logger` owns this
 Importers append to `$OMPB_HOME/training-log.jsonl` directly (validated, deduped). Analysis agents never branch on input source — they read the unified log.
 
 **Type refinement.** Importers see only distance, so they type runs coarsely (easy/long). After a bulk import, run `python3 "$CLAUDE_PLUGIN_ROOT/scripts/reclassify.py"` (or `ompb_core.reclassify`) to re-type runs into recovery/easy/tempo/interval/long using HR/pace bands calibrated to the runner (`scripts/classify.py`). Idempotent; recalibrates as the log grows. This is what makes the intensity distribution meaningful rather than easy/long-only.
+
+**Single-activity deep analysis (on request only).** When the runner asks to break down ONE session, `scripts/analyze_activity.py` (or `ompb_core.analyze_activity("strava-<id>" | "<path>.fit")`) reads that activity's **laps** → workout structure (interval reps + recovery, tempo block, progression, steady) and pacing (negative split / fade / consistency). `.fit` is offline; Strava is 1 API call. NEVER bulk-run it (rate limits). It asserts a high-confidence `type` only for HR-confirmed intervals (and long); easy/tempo intensity stays the calibrated classifier's call.
 </data_ingest>
 
 <safety>
