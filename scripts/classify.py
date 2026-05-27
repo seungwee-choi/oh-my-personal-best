@@ -25,6 +25,30 @@ from typing import Dict, List, Optional
 
 RUN_TYPES = ("easy", "long", "tempo", "interval", "recovery")
 
+# Activity-name / title keywords → type. Highest-confidence signal (the runner named it).
+# Ordered: a race word wins over "long", "interval" over "tempo", etc. Shared by the CSV
+# and Strava importers so naming inference stays consistent.
+_NAME_KEYWORDS = [
+    ("race",     ["race", "competition", "parkrun", "대회", "레이스", "마라톤 대회"]),
+    ("interval", ["interval", "track", "speed", "vo2", "repeat", "fartlek",
+                  "인터벌", "트랙", "스피드", "반복"]),
+    ("tempo",    ["tempo", "threshold", "lactate", "cruise", "템포", "역치", "임계"]),
+    ("long",     ["long run", "longrun", "long", "lsd", "endurance", "롱런", "롱 런", "장거리"]),
+    ("recovery", ["recovery", "shake out", "shakeout", "regeneration", "regen", "jog",
+                  "회복", "리커버리", "조깅"]),
+]
+
+
+def name_to_type(text: Optional[str]) -> Optional[str]:
+    """Infer a run type from an activity name/title, or None if no keyword matches."""
+    if not text:
+        return None
+    low = text.lower()
+    for session_type, keywords in _NAME_KEYWORDS:
+        if any(kw in low for kw in keywords):
+            return session_type
+    return None
+
 
 def _pace_to_sec(p) -> Optional[int]:
     if not p or ":" not in str(p):

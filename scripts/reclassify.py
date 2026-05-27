@@ -49,7 +49,9 @@ def main(argv=None):
         if e.get("sport") not in (None, "running"):
             continue
         cur = e.get("type")
-        if cur not in _REFINABLE or e.get("type_source") == "name":
+        # Skip coarse-uncategorizable types and anything the runner/source labeled explicitly
+        # (a CSV/Strava title keyword, or Strava's workout_type race/long/workout tag).
+        if cur not in _REFINABLE or e.get("type_source") in ("name", "strava"):
             continue
         a = e.get("actual") or {}
         dist = a.get("distance_km")
