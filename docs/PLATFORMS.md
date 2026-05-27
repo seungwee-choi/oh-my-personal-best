@@ -38,7 +38,8 @@ ompb.build_report(lang="ko")           # -> path to self-contained HTML
 ompb.build_week(lang="ko")             # -> path to the weekly card
 ompb.export_report(fmt="pdf")          # -> static PDF/PNG via a headless browser
 ompb.reclassify()                      # calibrated re-typing of the whole log
-ompb.analyze_activity("strava-123")    # one activity: structure/reps/pacing (.fit path too)
+ompb.analyze_activity("strava-123")    # one activity: structure/reps/pacing/decoupling/zones/GAP
+ompb.build_activity("strava-123")      # -> that analysis as a self-contained HTML card
 ```
 
 Read paths import the script helpers in-process; write/render paths invoke the

@@ -239,6 +239,23 @@ def build_week(home: Optional[str] = None, lang: Optional[str] = None,
     return (proc.stdout or "").strip().splitlines()[-1]
 
 
+def build_activity(source: str, home: Optional[str] = None, lang: Optional[str] = None,
+                   out: Optional[str] = None, long_threshold: Optional[float] = None) -> str:
+    """Render a single-activity analysis CARD (laps + streams → structure/reps/pacing/
+    decoupling/zones/GAP) to a self-contained HTML file. ``source`` = .fit path or
+    "strava-<id>"/"<id>". Returns the output path. Single-activity only — never bulk."""
+    s = str(source)
+    args = (["--strava", s] if (s.startswith("strava-") or s.isdigit()) else ["--fit", s])
+    if lang:
+        args += ["--lang", lang]
+    if out:
+        args += ["--out", out]
+    if long_threshold is not None:
+        args += ["--long-threshold", str(long_threshold)]
+    proc = _run("build_activity.py", args, home)
+    return (proc.stdout or "").strip().splitlines()[-1]
+
+
 def reclassify(home: Optional[str] = None, long_threshold: Optional[float] = None,
                dry_run: bool = False) -> str:
     """Re-type running sessions with the calibrated, runner-relative classifier

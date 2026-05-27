@@ -180,7 +180,19 @@ def analyze_laps(laps: List[dict], distance_km: Optional[float] = None,
     L = _norm(laps)
     n = len(L)
     total_km = distance_km or sum(x["km"] for x in L)
-    base = {"laps": n, "reps": [], "rep_summary": None, "splits": None, "notes": []}
+    # Card-ready extras: the full lap series (for the workout-shape chart) + a session summary.
+    lap_series = [{"km": round(x["km"], 2), "pace": _fp(x["pace"]), "avg_hr": x.get("avg_hr")} for x in L]
+    _durs = [x["dur"] for x in L if x.get("dur")]
+    _total_dur = int(sum(_durs)) if _durs else None
+    _hrw = [(x["avg_hr"], x["dur"]) for x in L if x.get("avg_hr") and x.get("dur")]
+    summary = {
+        "distance_km": round(total_km, 2) if total_km else None,
+        "duration_s": _total_dur,
+        "avg_pace": _fp(_total_dur / total_km) if (_total_dur and total_km) else None,
+        "avg_hr": round(sum(h * d for h, d in _hrw) / sum(d for _, d in _hrw)) if _hrw else None,
+    }
+    base = {"laps": n, "reps": [], "rep_summary": None, "splits": None, "notes": [],
+            "lap_series": lap_series, "summary": summary}
 
     if n < 3:
         return {**base, "structure": "unknown", "confidence": "low",

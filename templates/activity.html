@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Activity Analysis</title>
+<style>
+:root{--paper:#faf8f3;--paper2:#f1ece1;--ink:#1c1a17;--ink2:#46423b;--muted:#6f6c66;
+--rule:#e2ddd1;--accent:#b8401a;--accent-ink:#7a2a10;--light:#d8c08c;--cross:#c9a37a;
+--mono:ui-monospace,Menlo,monospace;--serif:Georgia,"Times New Roman",serif;
+--sans:-apple-system,Helvetica,Arial,sans-serif;}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#e8e3d8;color:var(--ink);font-family:var(--sans);line-height:1.5;padding:24px}
+.card{max-width:820px;margin:0 auto;background:var(--paper);box-shadow:0 1px 24px rgba(0,0,0,.10);padding:40px 44px}
+.top{display:flex;justify-content:space-between;align-items:flex-start;border-bottom:1.5px solid var(--ink);padding-bottom:14px}
+.brand{font-family:var(--mono);font-size:11px;letter-spacing:.16em;color:var(--ink)}
+.brand .s{display:block;color:var(--muted);font-size:9.5px;letter-spacing:.18em;margin-top:3px}
+.meta{font-family:var(--mono);font-size:10.5px;color:var(--muted);text-align:right;letter-spacing:.04em}
+.meta b{color:var(--ink)}
+h1{font-family:var(--serif);font-size:34px;font-weight:600;letter-spacing:-.01em;margin:18px 0 4px}
+h1 em{color:var(--accent);font-style:italic}
+.badge{display:inline-block;background:var(--accent);color:#fff;font-family:var(--mono);font-size:11px;
+letter-spacing:.18em;text-transform:uppercase;padding:5px 11px 4px;margin-top:6px}
+.badge.soft{background:var(--paper2);color:var(--ink2)}
+.strip{display:grid;grid-template-columns:repeat(4,1fr);border-top:1px solid var(--rule);
+border-bottom:1px solid var(--rule);margin:18px 0 8px}
+.strip .c{padding:13px 12px;border-right:1px dashed var(--rule)}
+.strip .c:last-child{border-right:0}
+.strip .l{font-family:var(--mono);font-size:9px;letter-spacing:.16em;text-transform:uppercase;color:var(--muted);margin-bottom:5px}
+.strip .v{font-family:var(--serif);font-size:21px;line-height:1}
+.strip .v .u{font-family:var(--mono);font-size:11px;color:var(--muted)}
+h2{font-family:var(--mono);font-size:10.5px;letter-spacing:.18em;text-transform:uppercase;color:var(--muted);margin:24px 0 10px}
+.shape svg{display:block;width:100%;height:auto}
+.struct{font-family:var(--serif);font-size:19px;color:var(--ink);margin:4px 0 2px}
+.notes{list-style:none;margin:8px 0 0}
+.notes li{font-family:var(--sans);font-size:13px;color:var(--ink2);padding-left:14px;position:relative;margin:3px 0}
+.notes li:before{content:"›";position:absolute;left:0;color:var(--accent)}
+.cells{display:grid;grid-template-columns:repeat(3,1fr);gap:0;border-top:1px solid var(--rule);margin-top:18px}
+.cells .c{padding:14px 14px 12px;border-right:1px dashed var(--rule);border-bottom:1px solid var(--rule)}
+.cells .c:nth-child(3n){border-right:0}
+.cells .l{font-family:var(--mono);font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin-bottom:5px}
+.cells .v{font-family:var(--serif);font-size:18px;line-height:1.1}
+.cells .sub{font-family:var(--sans);font-size:11px;color:var(--muted);margin-top:3px}
+.zones{margin-top:18px}
+.zbar{display:flex;height:26px;border-radius:2px;overflow:hidden}
+.zbar span{display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:9.5px;color:#fff;min-width:0}
+.zlegend{display:flex;gap:14px;flex-wrap:wrap;margin-top:8px;font-family:var(--mono);font-size:9.5px;color:var(--muted)}
+.zlegend i{display:inline-block;width:9px;height:9px;margin-right:5px;vertical-align:-1px}
+.foot{margin-top:24px;border-top:1px solid var(--rule);padding-top:12px;font-family:var(--mono);
+font-size:9.5px;color:var(--muted);letter-spacing:.04em;display:flex;justify-content:space-between}
+@media print{body{background:#fff;padding:0}.card{box-shadow:none;max-width:none}}
+</style>
+</head>
+<body>
+<div class="card" id="card"></div>
+<script>
+const D = __ACTIVITY_DATA__;
+const KO = false;
+const PAL = {accent:'#b8401a',accentInk:'#7a2a10',light:'#d8c08c',cross:'#c9a37a',rule:'#e2ddd1',muted:'#6f6c66',ink:'#1c1a17'};
+const ZONE_C = ['#c4ccb8','#d8c08c','#c4642f','#a83c18','#7a2a10'];
+
+const T = KO ? {
+  brand:'활동 분석', suite:'마라톤 코칭 스위트', shape:'워크아웃 모양', struct:'구조',
+  dist:'거리', dur:'시간', pace:'평균 페이스', hr:'평균 심박', zones:'심박 존 분포',
+  decoup:'유산소 디커플링', gap:'경사보정 페이스', efforts:'하드 에포트', split:'스플릿',
+  consist:'페이스 일관성', neg:'네거티브', pos:'포지티브', even:'고른', laps:'랩',
+  types:{interval:'인터벌',tempo:'템포',long:'롱런',recovery:'회복',easy:'이지',progression:'프로그레션',steady:'스테디',fartlek:'파틀렉',unknown:'세션'}
+} : {
+  brand:'Activity Analysis', suite:'Marathon Coaching Suite', shape:'Workout shape', struct:'Structure',
+  dist:'Distance', dur:'Time', pace:'Avg pace', hr:'Avg HR', zones:'Time in HR zone',
+  decoup:'Aerobic decoupling', gap:'Grade-adj. pace', efforts:'Hard efforts', split:'Split',
+  consist:'Pace consistency', neg:'negative', pos:'positive', even:'even', laps:'laps',
+  types:{interval:'Interval',tempo:'Tempo',long:'Long',recovery:'Recovery',easy:'Easy',progression:'Progression',steady:'Steady',fartlek:'Fartlek',unknown:'Session'}
+};
+
+const paceSec = p => { if(!p||!String(p).includes(':'))return null; const [m,s]=String(p).split(':'); return +m*60+ +s; };
+const fmtDur = s => { if(!s)return '—'; s=Math.round(s); const h=(s/3600)|0,m=((s%3600)/60)|0,x=s%60;
+  return h? `${h}:${String(m).padStart(2,'0')}:${String(x).padStart(2,'0')}` : `${m}:${String(x).padStart(2,'0')}`; };
+const esc = x => (x==null?'':String(x));
+
+function shapeSVG(series){
+  if(!series||series.length<2) return '';
+  const W=720,H=120,pad={l:6,r:6,t:8,b:8};
+  const paces=series.map(s=>paceSec(s.pace)).filter(v=>v);
+  if(paces.length<2) return '';
+  const fast=Math.min(...paces), slow=Math.max(...paces), med=paces.slice().sort((a,b)=>a-b)[paces.length>>1];
+  const n=series.length, bw=(W-pad.l-pad.r)/n*0.82, gap=(W-pad.l-pad.r)/n;
+  const spd=p=>1/p, smin=spd(slow), smax=spd(fast);
+  let bars='';
+  series.forEach((s,i)=>{
+    const p=paceSec(s.pace); if(!p)return;
+    const frac=(smax-smin)?(spd(p)-smin)/(smax-smin):0.5;
+    const h=(H-pad.t-pad.b)*(0.25+0.75*frac);
+    const x=pad.l+i*gap+(gap-bw)/2, y=H-pad.b-h;
+    const work=p<=med-8;  // faster than median by ≥8s/km
+    bars+=`<rect x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${bw.toFixed(1)}" height="${h.toFixed(1)}" fill="${work?PAL.accent:PAL.light}" rx="1"/>`;
+  });
+  return `<svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg" role="img">${bars}
+    <line x1="${pad.l}" x2="${W-pad.r}" y1="${H-pad.b}" y2="${H-pad.b}" stroke="${PAL.ink}" stroke-width="1"/></svg>`;
+}
+
+function cell(l,v,sub){ return `<div class="c"><div class="l">${l}</div><div class="v">${v}</div>${sub?`<div class="sub">${sub}</div>`:''}</div>`; }
+
+function render(){
+  const a=D.summary||{}, s=D.structure||'unknown';
+  const badge = T.types[s]||s.toUpperCase();
+  const rep = D.rep_summary ? ` · ${esc(D.rep_summary)}` : '';
+  const dateStr = D.date || '';
+
+  // stat cells (only those present)
+  let cells='';
+  if(D.decoupling_pct!=null) cells+=cell(T.decoup, (D.decoupling_pct>0?'+':'')+D.decoupling_pct+'%', D.decoupling_pct>5?(KO?'드리프트 높음':'high drift'):(KO?'양호':'well-coupled'));
+  if(D.gap_pace) cells+=cell(T.gap, D.gap_pace+'/km', (KO?'raw ':'raw ')+esc(D.raw_pace)+'/km');
+  if(D.hard_efforts!=null) cells+=cell(T.efforts, D.hard_efforts, KO?'Z4+ ≥45초':'Z4+ ≥45s');
+  if(D.splits){ const f=D.splits.fade_pct;
+    cells+=cell(T.split, D.splits.negative_split?T.neg:(f>1?T.pos:T.even), (f>0?'+':'')+f+'%');
+    cells+=cell(T.consist, '±'+Math.round((D.splits.consistency_cv||0)*100)+'%', '');
+  }
+  if(D.ascent_m!=null) cells+=cell(KO?'누적 상승':'Ascent', D.ascent_m+' m','');
+
+  // zones
+  let zones='';
+  if(D.time_in_zone_pct){ const z=D.time_in_zone_pct;
+    const segs=[1,2,3,4,5].map(i=>{const v=z['Z'+i]||0; return v>0?`<span style="flex:${v};background:${ZONE_C[i-1]}">${v>=7?'Z'+i:''}</span>`:'';}).join('');
+    const leg=[1,2,3,4,5].map(i=>`<span><i style="background:${ZONE_C[i-1]}"></i>Z${i} ${z['Z'+i]||0}%</span>`).join('');
+    zones=`<h2>${T.zones}</h2><div class="zbar">${segs}</div><div class="zlegend">${leg}</div>`;
+  }
+
+  document.getElementById('card').innerHTML = `
+    <div class="top">
+      <div class="brand">OH-MY-PERSONAL-BEST<span class="s">${T.suite}</span></div>
+      <div class="meta">${dateStr?`<b>${dateStr}</b><br>`:''}${esc(D.source||'').toUpperCase()}</div>
+    </div>
+    <h1>${KO?'활동 ':''}<em>${KO?'분석':'Activity'}</em>${KO?'':' Analysis'}</h1>
+    <div class="badge${s==='steady'||s==='unknown'?' soft':''}">${badge}</div>
+    <div class="strip">
+      ${cellStrip(T.dist, a.distance_km!=null?a.distance_km:'—','km')}
+      ${cellStrip(T.dur, fmtDur(a.duration_s),'')}
+      ${cellStrip(T.pace, esc(a.avg_pace)||'—','/km')}
+      ${cellStrip(T.hr, a.avg_hr!=null?a.avg_hr:'—','bpm')}
+    </div>
+    <div class="shape"><h2>${T.shape}<span style="float:right;text-transform:none;letter-spacing:0">${D.laps} ${T.laps}</span></h2>${shapeSVG(D.lap_series)}</div>
+    <div class="struct"><b>${badge}</b>${rep}</div>
+    ${(D.notes&&D.notes.length)?`<ul class="notes">${D.notes.map(n=>`<li>${esc(n)}</li>`).join('')}</ul>`:''}
+    ${cells?`<div class="cells">${cells}</div>`:''}
+    ${zones}
+    <div class="foot"><span>${T.brand}</span><span>oh-my-personal-best</span></div>`;
+}
+function cellStrip(l,v,u){ return `<div class="c"><div class="l">${l}</div><div class="v">${v}${u?` <span class="u">${u}</span>`:''}</div></div>`; }
+render();
+</script>
+</body>
+</html>

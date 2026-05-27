@@ -71,6 +71,16 @@ def test_auto_lap_interval_flagged():
 def test_too_few_laps_unknown():
     r = analyze.analyze_laps([_lap(5.0, 1500), _lap(5.0, 1500)])
     assert r["structure"] == "unknown"
+    assert r["lap_series"] and r["summary"]  # card data present even for unknown
+
+
+def test_lap_series_and_summary():
+    laps = [_lap(1.0, 300, 150), _lap(1.0, 330, 150), _lap(2.0, 660, 150)]
+    r = analyze.analyze_laps(laps)
+    assert len(r["lap_series"]) == 3 and r["lap_series"][0]["pace"] == "5:00"
+    s = r["summary"]
+    assert s["distance_km"] == 4.0 and s["duration_s"] == 1290
+    assert s["avg_pace"] == "5:22" and s["avg_hr"] == 150   # 1290/4 = 322.5 s/km
 
 
 def test_splits_negative():
