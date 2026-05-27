@@ -232,8 +232,9 @@ def laps_from_fit(path: str):
 def streams_from_fit(path: str) -> dict:
     """Per-second streams from `record` messages: {time[s], heartrate, velocity[m/s], distance[m]}.
     For analyze.analyze_streams (decoupling / time-in-zone / hard efforts). Offline."""
-    times, hr, vel, dist = [], [], [], []
+    times, hr, vel, dist, alt = [], [], [], [], []
     t0 = None
+    have_alt = False
     with fitdecode.FitReader(path) as fr:
         for frame in fr:
             if isinstance(frame, fitdecode.FitDataMessage) and frame.name == "record":
@@ -247,11 +248,20 @@ def streams_from_fit(path: str) -> dict:
                 spd = _get(frame, "enhanced_speed")
                 if spd is None:
                     spd = _get(frame, "speed")
+                a = _get(frame, "enhanced_altitude")
+                if a is None:
+                    a = _get(frame, "altitude")
+                if a is not None:
+                    have_alt = True
                 times.append(sec)
                 hr.append(_get(frame, "heart_rate"))
                 vel.append(spd)
                 dist.append(_get(frame, "distance"))
-    return {"time": times, "heartrate": hr, "velocity": vel, "distance": dist}
+                alt.append(a)
+    streams = {"time": times, "heartrate": hr, "velocity": vel, "distance": dist}
+    if have_alt:  # many COROS exports omit altitude in records → only include it when present
+        streams["altitude"] = alt
+    return streams
 
 
 def parse_fit(path: str, source_id: str, tz, long_threshold: float,

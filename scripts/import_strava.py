@@ -207,11 +207,16 @@ def laps_from_strava(activity_id, home=None):
 
 
 def _streams_from_data(data: dict) -> dict:
-    """Normalize Strava's key_by_type streams response → {time, heartrate, velocity, distance}."""
+    """Normalize Strava's key_by_type streams → {time, heartrate, velocity, distance, grade, altitude}."""
     def col(k):
         return (data.get(k) or {}).get("data")
-    return {"time": col("time"), "heartrate": col("heartrate"),
-            "velocity": col("velocity_smooth"), "distance": col("distance")}
+    s = {"time": col("time"), "heartrate": col("heartrate"),
+         "velocity": col("velocity_smooth"), "distance": col("distance")}
+    if col("grade_smooth"):
+        s["grade"] = col("grade_smooth")     # percent
+    if col("altitude"):
+        s["altitude"] = col("altitude")      # metres
+    return s
 
 
 def laps_from_strava_streams(activity_id, home=None):
@@ -226,7 +231,7 @@ def laps_from_strava_streams(activity_id, home=None):
         cred = json.load(fh)
     token = get_access_token(cred, cred_path)
     url = (f"https://www.strava.com/api/v3/activities/{aid}/streams"
-           "?keys=time,heartrate,velocity_smooth,distance&key_by_type=true")
+           "?keys=time,heartrate,velocity_smooth,distance,grade_smooth,altitude&key_by_type=true")
     return _streams_from_data(_get_json(url, token))
 
 

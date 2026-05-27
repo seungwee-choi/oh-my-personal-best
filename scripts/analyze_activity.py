@@ -14,6 +14,7 @@ or a confirmed tempo) — surfaces call ompb_core.analyze_activity.
 """
 import argparse
 import json
+import os
 import sys
 
 import analyze
@@ -46,6 +47,35 @@ def _corroborate(result):
         result["notes"].append(f"stream shows {eff} sustained hard efforts — possible intervals")
 
 
+def _write_back(home, source_id, new_type):
+    """Lock the analyzed activity's log entry to `new_type` with type_source='laps' (so
+    reclassify preserves it). Returns {source_id, from, to, wrote} or None if not matched."""
+    from ompb_env import resolve_home, log_path
+    path = log_path(resolve_home(home))
+    try:
+        with open(path, encoding="utf-8") as fh:
+            entries = [json.loads(line) for line in fh if line.strip()]
+    except FileNotFoundError:
+        return None
+    old = None
+    for e in entries:
+        if e.get("source_id") == source_id:
+            old = e.get("type")
+            noop = (old == new_type and e.get("type_source") == "laps")
+            e["type"], e["type_source"] = new_type, "laps"
+            break
+    if old is None:
+        return None
+    if noop:
+        return {"source_id": source_id, "from": old, "to": new_type, "wrote": False}
+    tmp = path + ".tmp"
+    with open(tmp, "w", encoding="utf-8") as fh:
+        for e in entries:
+            fh.write(json.dumps(e, ensure_ascii=False) + "\n")
+    os.replace(tmp, path)  # atomic
+    return {"source_id": source_id, "from": old, "to": new_type, "wrote": True}
+
+
 def main(argv=None):
     ap = argparse.ArgumentParser(description="Deep-analyze a single activity (laps + streams).")
     src = ap.add_mutually_exclusive_group(required=True)
@@ -54,6 +84,8 @@ def main(argv=None):
     ap.add_argument("--home", help="OMPB_HOME (Strava credentials + HRmax calibration).")
     ap.add_argument("--long-threshold", type=float, default=19.0)
     ap.add_argument("--no-streams", action="store_true", help="Skip the per-second stream pass.")
+    ap.add_argument("--write", action="store_true",
+                    help="Lock the matched log entry to the analyzed type (type_source='laps').")
     args = ap.parse_args(argv)
 
     try:
@@ -82,6 +114,13 @@ def main(argv=None):
             _corroborate(result)
         except Exception as e:  # noqa: BLE001 — streams are best-effort; laps already stand
             result["notes"].append(f"streams unavailable: {e}")
+
+    # Persist the high-confidence type back to the log (interval/long only), if requested.
+    if args.write and result.get("type") in ("interval", "long") and result.get("confidence") in ("high", "medium"):
+        sid = (f"strava-{args.strava.replace('strava-', '')}" if args.strava
+               else os.path.splitext(os.path.basename(args.fit))[0])
+        wb = _write_back(args.home, sid, result["type"])
+        result["written"] = wb or {"source_id": sid, "matched": False}
 
     print(json.dumps(result, ensure_ascii=False))
     return 0

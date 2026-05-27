@@ -143,6 +143,58 @@ def test_strava_streams_adapter():
     assert s["heartrate"] == [150, 151, 152] and s["velocity"] == [3.0, 3.1, 3.0]
 
 
+# --- GAP (grade-adjusted pace) ---------------------------------------------------
+
+def test_minetti_factor():
+    assert abs(analyze._minetti(0.0) - 1.0) < 1e-9
+    assert analyze._minetti(0.10) > 1.3      # uphill costs more
+    assert analyze._minetti(-0.10) < 1.0     # downhill costs less
+
+
+def test_gap_uphill():
+    n = 600
+    s = {"velocity": [3.0] * n, "heartrate": [150] * n, "time": list(range(n)),
+         "distance": [i * 3.0 for i in range(n)], "altitude": [i * 0.15 for i in range(n)]}  # 5% climb
+    r = analyze.analyze_streams(s)
+    assert "gap_pace" in r and r["ascent_m"] >= 80 and "hills cost" in r["gap_note"]
+
+
+def test_gap_flat_not_reported():
+    n = 600
+    s = {"velocity": [3.0] * n, "heartrate": [150] * n, "time": list(range(n)),
+         "distance": [i * 3.0 for i in range(n)], "altitude": [100.0] * n}
+    r = analyze.analyze_streams(s)
+    assert "gap_pace" not in r   # flat → adjustment < 3 s/km
+
+
+# --- write-back (lock the analyzed type into the log) ----------------------------
+
+def test_write_back_locks_type():
+    import json as _json
+    import shutil
+    import analyze_activity
+    base = "/tmp/ompb-wb-test"
+    shutil.rmtree(base, ignore_errors=True)
+    os.makedirs(base)
+    log = os.path.join(base, "training-log.jsonl")
+    try:
+        with open(log, "w") as fh:
+            fh.write(_json.dumps({"date": "2026-05-01", "type": "easy", "sport": "running",
+                                  "source_id": "abc123", "actual": {}}) + "\n")
+            fh.write(_json.dumps({"date": "2026-05-02", "type": "easy", "sport": "running",
+                                  "source_id": "other", "actual": {}}) + "\n")
+        wb = analyze_activity._write_back(base, "abc123", "interval")
+        assert wb["from"] == "easy" and wb["to"] == "interval" and wb["wrote"] is True
+        entries = [_json.loads(x) for x in open(log)]
+        hit = [e for e in entries if e["source_id"] == "abc123"][0]
+        assert hit["type"] == "interval" and hit["type_source"] == "laps"
+        assert [e for e in entries if e["source_id"] == "other"][0]["type"] == "easy"  # untouched
+        assert analyze_activity._write_back(base, "abc123", "interval")["wrote"] is False  # idempotent
+        assert analyze_activity._write_back(base, "nope", "long") is None                 # unmatched
+    finally:
+        shutil.rmtree(base, ignore_errors=True)
+
+
 if __name__ == "__main__":
     for name, fn in sorted(globals().items()):
         if name.startswith("test_") and callable(fn):
