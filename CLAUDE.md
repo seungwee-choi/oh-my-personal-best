@@ -94,6 +94,8 @@ Input paths normalize to the same `training-log` schema (`data-logger` owns this
 4. **Strava API.** `pb-connect-strava` (one-time OAuth with the runner's own app) → `import_strava.py` auto-refreshes the 6-hour access token and syncs. Credentials stored in `$OMPB_HOME/strava.json` (chmod 600).
 5. **API sync — Phase 2 (later).** Garmin / Coros OAuth (interface abstracted; not yet implemented).
 Importers append to `$OMPB_HOME/training-log.jsonl` directly (validated, deduped). Analysis agents never branch on input source — they read the unified log.
+
+**Type refinement.** Importers see only distance, so they type runs coarsely (easy/long). After a bulk import, run `python3 "$CLAUDE_PLUGIN_ROOT/scripts/reclassify.py"` (or `ompb_core.reclassify`) to re-type runs into recovery/easy/tempo/interval/long using HR/pace bands calibrated to the runner (`scripts/classify.py`). Idempotent; recalibrates as the log grows. This is what makes the intensity distribution meaningful rather than easy/long-only.
 </data_ingest>
 
 <safety>

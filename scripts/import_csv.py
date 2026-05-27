@@ -293,10 +293,7 @@ def process_row(row: Dict, header: List[str], logged_at: str) -> Optional[Dict]:
     type_raw = _get(row, col_type)
     session_type = infer_type(name_raw, type_raw)
 
-    # Skip non-run activities that are clearly not relevant (optional: keep cross-training)
-    # We keep everything so data-logger can decide what to ingest.
-
-    return {
+    entry = {
         "date": date_str,
         "type": session_type,
         "planned": None,
@@ -311,6 +308,11 @@ def process_row(row: Dict, header: List[str], logged_at: str) -> Optional[Dict]:
         "source": "csv",
         "logged_at": logged_at,
     }
+    # A non-default type came from an explicit activity name/type keyword — mark it so
+    # reclassify.py preserves the runner's own label instead of re-deriving from metrics.
+    if session_type != "easy":
+        entry["type_source"] = "name"
+    return entry
 
 
 # ---------------------------------------------------------------------------

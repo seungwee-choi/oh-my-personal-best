@@ -868,20 +868,16 @@ function chartEasyPlateau(data) {
   </svg>`;
 }
 
-function chartDonut(byType, byHr) {
+function chartDonut(slices) {
   const W = 180, H = 180;
   const cx = W / 2, cy = H / 2, R = 76, r = 48;
 
-  const total = byType.easy + byType.long + byType.cross;
-  const slices = [
-    { k: 'Easy runs', v: byType.easy, c: PAL.accent },
-    { k: 'Long runs', v: byType.long, c: PAL.accentInk },
-    { k: 'Cross-train', v: byType.cross, c: PAL.cross },
-  ];
+  const total = slices.reduce((s, x) => s + (x.v || 0), 0) || 1;
 
   let acc = -Math.PI / 2;
   let paths = '';
   slices.forEach(s => {
+    if (!s.v) return;
     const a0 = acc;
     const a1 = acc + (s.v / total) * Math.PI * 2;
     const lar = (a1 - a0) > Math.PI ? 1 : 0;
@@ -1129,37 +1125,44 @@ function render(D) {
   // -------- Intensity distribution ----------
   const sec7 = el('section', { class: 'section' });
   const im = D.intensity_mix;
-  const imTotal = im.easy + im.long + im.cross;
   const ihr = D.intensity_by_hr;
+  // 세분화된 세션 종류, 강도순으로 밝은색→어두운색 (reclassify.py에서 보정).
+  const TYPE_COLORS = [
+    ['recovery', '회복',   '#d8c08c'],
+    ['easy',     '이지',   '#c4642f'],
+    ['tempo',    '템포',   '#a83c18'],
+    ['interval', '인터벌', '#7a2a10'],
+    ['long',     '롱런',   '#8a8f6b'],
+  ];
+  const runSlices = TYPE_COLORS.filter(([k]) => im[k]).map(([k, label, c]) => ({ k: label, v: im[k], c }));
+  const slices = runSlices.concat(im.cross ? [{ k: '크로스', v: im.cross, c: PAL.cross }] : []);
+  const sliceTotal = slices.reduce((s, x) => s + x.v, 0) || 1;
   sec7.innerHTML = `
     ${sectionHeadHTML('07', '강도 분포', '세션 종류 vs HR 기준')}
-    <p>디바이스 임포트는 거리에 기반해 세션을 분류한다(장거리 기준 이하는 전부 “이지”). HR×페이스는 다른, 더 정확한 이야기를 들려준다.</p>
+    <p>각 세션을 <i>당신</i>의 HR·페이스에 맞춰 보정해 회복·이지·템포·인터벌·롱런으로 분류한다. 오른쪽의 연속 HR 구간 분포는 교차 검증이다.</p>
     <div class="col-2" style="align-items:start">
       <div>
-        <h3>세션 종류 기준 · 디바이스 라벨</h3>
+        <h3>세션 종류 기준 · HR/페이스 보정</h3>
         <div class="donut-row">
           <div class="chart" id="chart-donut"></div>
           <div class="bar-comp">
-            ${barRowHTML('이지 런', im.easy, imTotal, PAL.accent)}
-            ${barRowHTML('롱 런', im.long, imTotal, PAL.accentInk)}
-            ${barRowHTML('크로스 트레이닝', im.cross, imTotal, PAL.cross)}
+            ${slices.map(s => barRowHTML(s.k, s.v, sliceTotal, s.c)).join('')}
           </div>
         </div>
       </div>
       <div>
-        <h3>HR 기준 · 실제 분포</h3>
-        <p style="color:var(--muted); font-size:12.5px; margin-bottom:14px">모든 세션을 이지 구간 기준 HR×페이스 위치로 재분류하면 다소 양극화된 분포가 드러난다 — 라벨이 암시하는 것보다 더 많은 퀄리티 훈련을 하고 있다.</p>
+        <h3>HR 기준 · 연속 분포</h3>
+        <p style="color:var(--muted); font-size:12.5px; margin-bottom:14px">모든 세션을 하나의 HR 강도 축(이지/모더릿/하드)에 올린, 같은 훈련에 대한 두 번째 렌즈 — 이산적 종류 라벨과 독립적이다.</p>
         <div class="bar-comp">
           ${barRowHTML('이지 (HR)', ihr.easy * 100, 100, PAL.accent, true)}
           ${barRowHTML('모더릿 (HR)', ihr.moderate * 100, 100, PAL.accentInk, true)}
           ${barRowHTML('하드 (HR)', ihr.hard * 100, 100, PAL.cross, true)}
         </div>
-        <div class="caption" style="margin-top:14px">km당 4:45 이하의 136회 세션(평균 HR 159)이 진짜 퀄리티 훈련의 존재를 확인해 준다 — 기록 전체에 걸쳐 매월 발생한다.</div>
       </div>
     </div>
   `;
   root.appendChild(sec7);
-  $('#chart-donut', sec7).innerHTML = chartDonut(im, ihr);
+  $('#chart-donut', sec7).innerHTML = chartDonut(slices);
 
   // -------- Long-run progression ----------
   const sec8 = el('section', { class: 'section pagebreak' });

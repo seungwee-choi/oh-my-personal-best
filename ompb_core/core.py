@@ -239,6 +239,20 @@ def build_week(home: Optional[str] = None, lang: Optional[str] = None,
     return (proc.stdout or "").strip().splitlines()[-1]
 
 
+def reclassify(home: Optional[str] = None, long_threshold: Optional[float] = None,
+               dry_run: bool = False) -> str:
+    """Re-type running sessions with the calibrated, runner-relative classifier
+    (recovery/easy/tempo/interval/long). Idempotent; run after an import to refine the
+    coarse easy/long device labels. Returns the summary (counts before/after)."""
+    args: List[str] = []
+    if long_threshold is not None:
+        args += ["--long-threshold", str(long_threshold)]
+    if dry_run:
+        args += ["--dry-run"]
+    proc = _run("reclassify.py", args, home)
+    return (proc.stderr or "reclassified").strip()
+
+
 def export_report(home: Optional[str] = None, fmt: str = "pdf", lang: Optional[str] = None,
                   out: Optional[str] = None, html: Optional[str] = None) -> str:
     """Render the analysis report to a static artifact (``fmt`` = "pdf" | "png") via a

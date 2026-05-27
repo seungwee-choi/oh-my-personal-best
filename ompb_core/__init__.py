@@ -30,6 +30,7 @@ from .core import (
     sync_strava,
     build_report,
     build_week,
+    reclassify,
     export_report,
 )
 
@@ -45,6 +46,7 @@ __all__ = [
     "sync_strava",
     "build_report",
     "build_week",
+    "reclassify",
     "export_report",
 ]
 

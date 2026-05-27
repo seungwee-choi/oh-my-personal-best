@@ -69,6 +69,10 @@ Ask what the runner has (or use `$ARGUMENTS` if a path was given):
 The importers append to `<home>/training-log.jsonl` (validated, deduped by `source_id`). Report the
 summary (activities imported, by sport).
 
+After importing, refine the coarse easy/long device labels into the full intensity split
+(recovery/easy/tempo/interval/long), calibrated to this runner's HR/pace:
+`python3 "$CLAUDE_PLUGIN_ROOT/scripts/reclassify.py"`. Idempotent — re-run after any later import.
+
 ## Step 3 — Bootstrap the profile
 Derive a `runner-profile.json` proposal from the imported log (delegate to `data-logger`):
 - `current_pb` (10k/half/full) from the fastest clean efforts at each distance
