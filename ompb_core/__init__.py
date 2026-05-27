@@ -31,6 +31,7 @@ from .core import (
     build_report,
     build_week,
     reclassify,
+    analyze_activity,
     export_report,
 )
 
@@ -47,6 +48,7 @@ __all__ = [
     "build_report",
     "build_week",
     "reclassify",
+    "analyze_activity",
     "export_report",
 ]
 

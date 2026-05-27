@@ -253,6 +253,22 @@ def reclassify(home: Optional[str] = None, long_threshold: Optional[float] = Non
     return (proc.stderr or "reclassified").strip()
 
 
+def analyze_activity(source: str, home: Optional[str] = None,
+                     long_threshold: Optional[float] = None) -> Dict[str, Any]:
+    """Deep-analyze ONE activity's lap structure (workout type, reps, pacing). ``source``
+    is a .fit path (offline) or a Strava activity id / "strava-<id>" (1 API call; needs
+    strava.json). Single-activity only — never bulk. Returns the analysis dict."""
+    s = str(source)
+    if s.startswith("strava-") or s.isdigit():
+        args = ["--strava", s]
+    else:
+        args = ["--fit", s]
+    if long_threshold is not None:
+        args += ["--long-threshold", str(long_threshold)]
+    proc = _run("analyze_activity.py", args, home)
+    return json.loads(proc.stdout)
+
+
 def export_report(home: Optional[str] = None, fmt: str = "pdf", lang: Optional[str] = None,
                   out: Optional[str] = None, html: Optional[str] = None) -> str:
     """Render the analysis report to a static artifact (``fmt`` = "pdf" | "png") via a
