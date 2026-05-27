@@ -27,6 +27,7 @@ import urllib.request
 from datetime import datetime, timezone
 
 from ompb_env import resolve_home, log_path, resolve_lang, star_cta, load_seen, dup_kind, mark_seen
+from classify import name_to_type  # shared title-keyword inference (avoid clash w/ local classify())
 
 TOKEN_URL = "https://www.strava.com/oauth/token"
 ACTIVITIES_URL = "https://www.strava.com/api/v3/athlete/activities"
@@ -128,6 +129,24 @@ def to_entry(a, long_threshold):
         return None
     dur = a.get("moving_time") or a.get("elapsed_time")
     hr = a.get("has_heartrate")
+
+    # Refine the run type from Strava's own high-confidence signals, before metric
+    # reclassification: the activity title (highest confidence) > Strava's workout_type
+    # tag (runs: 1=race, 2=long run, 3=workout). type_source marks these so reclassify.py
+    # keeps them. Easy/long-by-distance stays the default for untitled, untagged runs.
+    type_source = None
+    if is_run:
+        named = name_to_type(a.get("name"))
+        wt = a.get("workout_type")
+        if named:
+            ompb_type, type_source = named, "name"
+        elif wt == 1:
+            ompb_type, type_source = "race", "strava"
+        elif wt == 2:
+            ompb_type, type_source = "long", "strava"
+        elif wt == 3 and not hr:
+            ompb_type, type_source = "tempo", "strava"  # tagged a workout, no HR to refine
+
     actual = {
         "distance_km": distance_km,
         "pace": pace_from_speed(a.get("average_speed")) if is_run else None,
@@ -139,7 +158,7 @@ def to_entry(a, long_threshold):
         "calories": int(a["calories"]) if a.get("calories") else None,
         "ascent_m": int(a["total_elevation_gain"]) if a.get("total_elevation_gain") is not None else None,
     }
-    return {
+    entry = {
         "date": date,
         "type": ompb_type,
         "planned": None,
@@ -149,6 +168,9 @@ def to_entry(a, long_threshold):
         "source_id": f"strava-{a.get('id')}",
         "logged_at": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
     }
+    if type_source:
+        entry["type_source"] = type_source
+    return entry
 
 
 def main(argv=None):

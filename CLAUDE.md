@@ -91,7 +91,7 @@ Input paths normalize to the same `training-log` schema (`data-logger` owns this
 1. **Device files (.fit/.zip) — primary.** COROS/Garmin exports via `import_fit.py` (running → easy/long, other sports → cross; deduped by `source_id`). Needs `fitdecode`.
 2. **CSV upload.** Strava-style exports via `import_csv.py` (stdlib only).
 3. **Natural language — always on.** "오늘 10K 50분 뛰었어" → `data-logger` parses, validates, and appends.
-4. **Strava API.** `pb-connect-strava` (one-time OAuth with the runner's own app) → `import_strava.py` auto-refreshes the 6-hour access token and syncs. Credentials stored in `$OMPB_HOME/strava.json` (chmod 600).
+4. **Strava API.** `pb-connect-strava` (one-time OAuth with the runner's own app) → `import_strava.py` auto-refreshes the 6-hour access token and syncs. Credentials stored in `$OMPB_HOME/strava.json` (chmod 600). Types use Strava's own high-confidence signals — the activity title + the `workout_type` tag (race / long run / workout) — and `reclassify.py` refines the rest by HR/pace.
 5. **API sync — Phase 2 (later).** Garmin / Coros OAuth (interface abstracted; not yet implemented).
 Importers append to `$OMPB_HOME/training-log.jsonl` directly (validated, deduped). Analysis agents never branch on input source — they read the unified log.
 
