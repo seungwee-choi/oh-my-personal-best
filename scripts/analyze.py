@@ -67,6 +67,14 @@ def _smooth(xs: List[Optional[float]], w: int = 15) -> List[Optional[float]]:
     return out
 
 
+def _minetti(g: float) -> float:
+    """Metabolic-cost multiplier for running at gradient g (decimal), normalized to flat.
+    Minetti et al. (2002) energy-cost polynomial; clamped to its valid −45%..+45% range."""
+    g = max(-0.45, min(0.45, g))
+    return (155.4 * g ** 5 - 30.4 * g ** 4 - 43.3 * g ** 3
+            + 46.3 * g ** 2 + 19.5 * g + 3.6) / 3.6
+
+
 def _zone_idx(hr: float, hrmax: float) -> int:
     """5-zone index by %HRmax: Z1<60 Z2 60–70 Z3 70–80 Z4 80–90 Z5 ≥90."""
     f = hr / hrmax
@@ -134,6 +142,33 @@ def analyze_streams(streams: dict, hrmax: Optional[float] = None) -> Dict:
             if hot and run - dt < 45 <= run:  # crossed the 45s sustain threshold → new bout
                 bouts += 1
         out["hard_efforts"] = bouts
+
+    # GAP (grade-adjusted pace): equivalent flat pace for the same metabolic cost. Needs a
+    # grade or altitude stream (Strava has both; many .fit exports omit altitude → skipped).
+    grade = streams.get("grade")
+    alt = _smooth(streams.get("altitude"), 9) if streams.get("altitude") else None
+    dist = streams.get("distance")
+    grades = None
+    if grade and len(grade) >= n:
+        grades = [(grade[i] / 100.0) if grade[i] is not None else 0.0 for i in range(n)]
+    elif alt and dist:
+        grades = [0.0] * n
+        for i in range(1, n):
+            da = (alt[i] - alt[i - 1]) if (alt[i] is not None and alt[i - 1] is not None) else 0
+            dd = (dist[i] - dist[i - 1]) if (dist[i] is not None and dist[i - 1] is not None) else 0
+            grades[i] = da / dd if (dd and dd > 0.5) else 0.0
+    if grades and moving:
+        gv = statistics.mean(vel[i] * _minetti(grades[i]) for i in moving)
+        rv = statistics.mean(vel[i] for i in moving)
+        gap, raw = 1000 / gv, 1000 / rv
+        if abs(gap - raw) >= 3:  # ≥3 s/km of terrain adjustment → worth reporting
+            out["gap_pace"] = _fp(gap)
+            out["raw_pace"] = _fp(raw)
+            out["gap_note"] = (f"hills cost ~{int(abs(gap - raw))}s/km — grade-adjusted "
+                               f"{_fp(gap)}/km vs raw {_fp(raw)}/km")
+        if alt:
+            out["ascent_m"] = round(sum(max(0.0, alt[i] - alt[i - 1]) for i in range(1, n)
+                                        if alt[i] is not None and alt[i - 1] is not None))
     return out
 
 

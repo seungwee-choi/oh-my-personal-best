@@ -254,17 +254,18 @@ def reclassify(home: Optional[str] = None, long_threshold: Optional[float] = Non
 
 
 def analyze_activity(source: str, home: Optional[str] = None,
-                     long_threshold: Optional[float] = None) -> Dict[str, Any]:
-    """Deep-analyze ONE activity's lap structure (workout type, reps, pacing). ``source``
-    is a .fit path (offline) or a Strava activity id / "strava-<id>" (1 API call; needs
-    strava.json). Single-activity only — never bulk. Returns the analysis dict."""
+                     long_threshold: Optional[float] = None, write: bool = False) -> Dict[str, Any]:
+    """Deep-analyze ONE activity from its laps + per-second streams: workout structure
+    (interval reps / tempo / progression / steady), pacing, aerobic decoupling, time-in-zone,
+    hard-effort count, and grade-adjusted pace. ``source`` is a .fit path (offline) or a Strava
+    activity id / "strava-<id>" (≤2 API calls; needs strava.json). ``write=True`` locks the
+    matched log entry to the analyzed type (type_source='laps'). Single-activity only — never bulk."""
     s = str(source)
-    if s.startswith("strava-") or s.isdigit():
-        args = ["--strava", s]
-    else:
-        args = ["--fit", s]
+    args = (["--strava", s] if (s.startswith("strava-") or s.isdigit()) else ["--fit", s])
     if long_threshold is not None:
         args += ["--long-threshold", str(long_threshold)]
+    if write:
+        args.append("--write")
     proc = _run("analyze_activity.py", args, home)
     return json.loads(proc.stdout)
 
