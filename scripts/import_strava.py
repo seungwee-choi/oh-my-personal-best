@@ -191,9 +191,8 @@ def _laps_from_detail(detail: dict):
     return laps, (round(total / 1000.0, 3) if total else None)
 
 
-def laps_from_strava(activity_id, home=None):
-    """Fetch one activity's laps from the Strava detail endpoint (1 API call).
-    Returns (laps, total_km). For on-demand single-activity analysis only — never bulk."""
+def fetch_detail(activity_id, home=None) -> dict:
+    """Fetch one activity's detail object from Strava (1 API call). On-demand only."""
     aid = str(activity_id).replace("strava-", "")
     home = resolve_home(home)
     cred_path = os.path.join(home, "strava.json")
@@ -202,8 +201,18 @@ def laps_from_strava(activity_id, home=None):
     with open(cred_path, encoding="utf-8") as fh:
         cred = json.load(fh)
     token = get_access_token(cred, cred_path)
-    detail = _get_json(f"https://www.strava.com/api/v3/activities/{aid}?include_all_efforts=false", token)
-    return _laps_from_detail(detail)
+    return _get_json(f"https://www.strava.com/api/v3/activities/{aid}?include_all_efforts=false", token)
+
+
+def _meta_from_detail(detail: dict) -> dict:
+    """Card header fields from a Strava detail object: date + the device sport label."""
+    return {"date": (detail.get("start_date_local") or detail.get("start_date") or "")[:10] or None,
+            "sport_type": detail.get("sport_type") or detail.get("type")}
+
+
+def laps_from_strava(activity_id, home=None):
+    """Fetch one activity's laps from Strava (1 API call). Returns (laps, total_km)."""
+    return _laps_from_detail(fetch_detail(activity_id, home))
 
 
 def _streams_from_data(data: dict) -> dict:
