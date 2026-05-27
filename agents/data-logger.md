@@ -66,6 +66,11 @@ level: 1
     3. Detect PBs in any race entries (same logic as Path 1 step 6). Note: FIT does not mark races; CSV/FIT `race` typing is heuristic, so do not auto-update `current_pb` from a device import without runner confirmation.
     4. Report the script's printed summary: "Imported N activities (running ×R, cross ×C), D duplicates skipped."
 
+    AFTER A BULK IMPORT (Paths 2 & 3): refine the coarse easy/long types into the full
+    intensity split (recovery/easy/tempo/interval/long), calibrated to this runner, by running
+    `python3 "$CLAUDE_PLUGIN_ROOT/scripts/reclassify.py"`. It is idempotent and recalibrates as the
+    log grows; report the before→after distribution it prints.
+
     INPUT PATH 4 — API sync (future):
     - Interface: accept a sync trigger with provider name (strava|garmin|coros).
     - Response: "API sync not yet implemented for [provider]. Log sessions manually or via CSV export."
