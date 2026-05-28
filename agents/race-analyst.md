@@ -84,6 +84,8 @@ disallowedTools: Write, Edit
     7. Compose the diagnosis object and hand off to plan-architect.
        IMPORTANT — diagnosis.json field types (per docs/STATE-SCHEMA.md): `summary`, `limiter`, and `feasibility` MUST be plain strings. `observations` MUST be a list of strings. Do NOT write these as nested objects or lists — downstream renderers (build_report.py) perform string operations on them. If richer structure is useful, put it under a separate `detail` object key; never make the three core fields objects.
        LANGUAGE: write all diagnosis text (`summary`/`limiter`/`feasibility`/`observations`) in the runner's configured language — `$OMPB_HOME/config.json` `language` (`ko` → Korean, otherwise English). These fields are injected verbatim into the report, so writing them in English while the runner uses `ko` produces a mixed-language report.
+       OPTIONAL surface fields (when asked for them, same plain-string rules): `limiter_headline` = the limiter as one short noun phrase (no trailing period) used as the report's headline; `action_plan` = a list of `{tag, title, detail, how}` objects derived from this runner's limiter and recent load.
+       GROUNDING (non-negotiable — every field is rendered verbatim into the athlete's report): cite ONLY figures that appear in this runner's own data. Never invent activities, distances, races, or events; if a number is not in the log, leave it out. Always distinguish a SINGLE activity's distance from a weekly/monthly TOTAL — never describe an aggregated weekly or monthly volume as if it were one run. A fabricated detail (e.g. a "100 km ultra" that never happened) destroys trust in the whole report.
   </Method>
 
   <Output>
