@@ -902,7 +902,8 @@ function chartLongRuns(data) {
   const innerW = W - pad.l - pad.r;
   const innerH = H - pad.t - pad.b;
 
-  const ymax = 110;
+  const dataMax = Math.max(21.1, ...data.map(d => d.longest_km || 0));  // floor: keep the half-marathon ref in view
+  const ymax = Math.ceil(dataMax * 1.12);                              // frame the athlete's actual long runs
   const x = scale(0, data.length - 1, pad.l + 6, pad.l + innerW - 6);
   const y = scale(0, ymax, pad.t + innerH, pad.t);
 
@@ -914,7 +915,7 @@ function chartLongRuns(data) {
 
   // gridlines
   let grid = '';
-  [0, 21.1, 42.2, 100].forEach((v, i) => {
+  [0, 21.1, 42.2, 100].filter(v => v <= ymax).forEach((v, i) => {
     const isMarathon = v === 42.2;
     const isUltra = v === 100;
     const isHalf = v === 21.1;
@@ -942,8 +943,8 @@ function chartLongRuns(data) {
     if (isUltra) {
       dots += `
         <line x1="${x(i)}" x2="${x(i)}" y1="${y(d.longest_km) - 8}" y2="${y(d.longest_km) - 22}" stroke="${PAL.ink}" stroke-width="1"/>
-        <text x="${x(i)}" y="${y(d.longest_km) - 26}" text-anchor="middle" font-family="ui-monospace, Menlo, monospace" font-size="10" font-weight="700" fill="${PAL.ink}">100 KM 울트라</text>
-        <text x="${x(i)}" y="${y(d.longest_km) - 38}" text-anchor="middle" font-family="ui-monospace, Menlo, monospace" font-size="9" fill="${PAL.muted}">${fmt.monthLong(d.month)} · 13.2시간 · HR 133</text>`;
+        <text x="${x(i)}" y="${y(d.longest_km) - 26}" text-anchor="middle" font-family="ui-monospace, Menlo, monospace" font-size="10" font-weight="700" fill="${PAL.ink}">${Math.round(d.longest_km)} KM</text>
+        <text x="${x(i)}" y="${y(d.longest_km) - 38}" text-anchor="middle" font-family="ui-monospace, Menlo, monospace" font-size="9" fill="${PAL.muted}">${fmt.monthLong(d.month)} 최장</text>`;
     }
   });
 
@@ -980,6 +981,104 @@ function chartRecentWeeks(weeks) {
     <text x="${pad.l}" y="${H - 6}" font-family="ui-monospace, Menlo, monospace" font-size="9.5" fill="${PAL.muted}">10주 전</text>
     <text x="${pad.l + innerW}" y="${H - 6}" text-anchor="end" font-family="ui-monospace, Menlo, monospace" font-size="9.5" fill="${PAL.muted}">이번 주</text>
   </svg>`;
+}
+
+/* =========================================================
+   Deterministic insights — computed from THIS athlete's own
+   series (monthly / recent weeks / easy-HR-by-half). No
+   hardcoded sample numbers, no LLM. Every figure is real.
+   ========================================================= */
+const _avg = (a) => a.length ? a.reduce((s, x) => s + x, 0) / a.length : 0;
+
+function volGrowth(D) {                       // recent vs early monthly volume ratio
+  const km = D.monthly.map(m => m.km).filter(x => x > 0);
+  if (km.length < 2) return null;
+  const n = Math.max(1, Math.round(km.length * 0.25));
+  const e = _avg(km.slice(0, n)), r = _avg(km.slice(-n));
+  return e > 0 ? r / e : null;
+}
+function swingMonths(D, thr = 0.35) {         // months whose MoM change exceeds thr
+  const km = D.monthly.map(m => m.km);
+  let n = 0, tot = 0;
+  for (let i = 1; i < km.length; i++) {
+    if (km[i - 1] > 0) { tot++; if (Math.abs(km[i] - km[i - 1]) / km[i - 1] > thr) n++; }
+  }
+  return { n, tot };
+}
+function weekRange(D) {
+  const w = (D.recent_weeks_km || []).filter(x => x != null);
+  return w.length ? { min: Math.min(...w), max: Math.max(...w), n: w.length, avg: Math.round(_avg(w)) } : null;
+}
+function easyHrShift(D) {                      // change in iso-pace easy HR, first→last half-year
+  const h = D.easy_hr_by_half || [];
+  if (h.length < 2) return null;
+  return { from: h[0].hr, to: h[h.length - 1].hr, delta: h[h.length - 1].hr - h[0].hr,
+           fromLabel: h[0].label, toLabel: h[h.length - 1].label, span: h.length };
+}
+function longRunStats(D) {
+  const ls = D.monthly.map(m => m.longest_km).filter(x => x > 0);
+  if (!ls.length) return null;
+  return { max: Math.max(...ls), overHalf: D.monthly.filter(m => m.longest_km >= 21.1).length };
+}
+function hrSessionCount(D) { return (D.hr_by_pace || []).reduce((s, b) => s + (b.n || 0), 0); }
+
+// ---- caption sentences (always true for the data) ----
+function capRecentWeeks(D) {
+  const wr = weekRange(D);
+  if (!wr) return '최근 주간 트레이닝 부하 데이터가 부족합니다.';
+  const ratio = wr.min > 0 ? wr.max / wr.min : null;
+  const tail = ratio && ratio >= 2 ? `주차별 편차가 큽니다 — 최대 주가 최소 주의 ${ratio.toFixed(1)}배입니다`
+             : '주차별로 비교적 일관적입니다';
+  return `최근 ${wr.n}주 주간 부하 ${wr.min}–${wr.max} km(평균 ${wr.avg} km). ${tail}.`;
+}
+function capVolume(D) {
+  const km = D.monthly.map(m => m.km).filter(x => x > 0);
+  if (!km.length) return '관측 기간 동안의 월간 러닝 볼륨 추이입니다.';
+  const vg = volGrowth(D), recent = km.slice(-3);
+  const lo = Math.round(Math.min(...recent)), hi = Math.round(Math.max(...recent));
+  const grow = vg && vg >= 1.15 ? `관측 기간 동안 월간 볼륨이 약 ${vg.toFixed(1)}배로 늘었습니다. `
+             : vg && vg <= 0.87 ? '관측 기간 동안 월간 볼륨이 다소 줄었습니다. ' : '';
+  return `${grow}최근에는 월 ${lo}–${hi} km 수준입니다.`;
+}
+function capPace(D) {
+  const m = D.monthly.filter(x => x.avg_pace);
+  if (m.length < 2) return '숫자가 작을수록 빠릅니다. 월평균 페이스 추이입니다.';
+  return `숫자가 작을수록 빠릅니다. 월평균 페이스가 ${m[0].avg_pace}에서 최근 ${m[m.length - 1].avg_pace} 부근입니다.`;
+}
+function capHr(D) {
+  const eh = easyHrShift(D);
+  if (!eh) return '심박수는 노력 강도를 보여주는 지표입니다. 월별 평균 심박 추이입니다.';
+  const dir = eh.delta < -1 ? `같은 이지 페이스에서 평균 심박이 ${eh.fromLabel} ${eh.from} → ${eh.toLabel} ${eh.to} bpm로 내려가 유산소 효율이 개선되고 있습니다`
+            : eh.delta > 1 ? `같은 이지 페이스에서 평균 심박이 ${eh.fromLabel} ${eh.from} → ${eh.toLabel} ${eh.to} bpm로 올라, 피로나 기반 약화 신호를 살펴볼 만합니다`
+            : `같은 이지 페이스에서 평균 심박이 ${eh.from} → ${eh.to} bpm로 안정적입니다`;
+  return `심박수는 노력 강도를 보여주는 지표입니다. ${dir}.`;
+}
+function capLongRuns(D) {
+  const lr = longRunStats(D);
+  if (!lr) return '월별 최장 거리 추이입니다.';
+  return `월별 최장 거리 추이입니다. 최장 ${lr.max.toFixed(1)} km, 하프(21.1km) 이상 장거리를 ${lr.overHalf}개월에 수행했습니다.`;
+}
+// §06 aerobic-efficiency read-out from the easy-pace HR trend
+function effHeadline(D) {
+  const eh = easyHrShift(D);
+  if (!eh) return '유산소 효율 추이';
+  return eh.delta < -1 ? '유산소 효율이 개선되고 있다' : eh.delta > 1 ? '유산소 효율 정체·후퇴 신호' : '유산소 효율이 평탄하다';
+}
+function effNarrative(D) {
+  const eh = easyHrShift(D);
+  if (!eh) return '이지 구간(6:00–6:30/km) 세션의 반기별 평균 심박을 추적해, 같은 노력에서 유산소 효율이 어떻게 변하는지 봅니다.';
+  const vg = volGrowth(D);
+  const vol = vg && vg >= 1.15 ? `볼륨이 약 ${vg.toFixed(1)}배로 늘어난 동안 ` : '';
+  const verdict = eh.delta < -1 ? `평균 이지 HR이 ${eh.from} → ${eh.to} bpm로 ${Math.abs(eh.delta)}bpm 내려갔습니다 — 같은 노력에서 효율이 개선됐다는 좋은 신호입니다.`
+                : eh.delta > 1 ? `평균 이지 HR이 ${eh.from} → ${eh.to} bpm로 ${eh.delta}bpm 올랐습니다 — 같은 노력에서 효율이 나빠졌다는 신호이니 피로·기반을 점검할 만합니다.`
+                : `평균 이지 HR이 ${eh.from} → ${eh.to} bpm로 거의 변하지 않았습니다 — 같은 노력에서 효율이 정체되어 있습니다.`;
+  return `이지 구간 세션만 골라 반기 단위로 집계했습니다. ${vol}${verdict}`;
+}
+function effPull(D) {
+  const eh = easyHrShift(D);
+  if (!eh) return '';
+  const sign = eh.delta > 0 ? '+' : '';
+  return `"이지 구간 경제성 변화: ${sign}${eh.delta} bpm (${eh.fromLabel}→${eh.toLabel})."`;
 }
 
 /* =========================================================
@@ -1035,20 +1134,23 @@ function render(D) {
 
   // -------- The limiter ----------
   const sec3 = el('section', { class: 'section' });
+  const _vg = volGrowth(D), _sw = swingMonths(D), _wr = weekRange(D), _eh = easyHrShift(D);
+  const _limHead = D.diagnosis.limiter_headline
+    || ((D.diagnosis.limiter || '').split(/[—–.·]/)[0].trim()) || '핵심 제한 요인';
   sec3.innerHTML = `
     ${sectionHeadHTML('03', '제한 요인', '주요 진단')}
     <div class="limiter">
       <div class="badge">제한 요인</div>
-      <h2>부하 진행의 불규칙성으로 인한 유산소 효율 정체.</h2>
+      <h2>${_limHead}</h2>
       <p>${D.diagnosis.limiter}</p>
     </div>
     <div class="strip" style="margin-top:22px">
-      <div class="cell"><div class="l">볼륨 증가률 (24개월)</div><div class="v">×3.1</div></div>
-      <div class="cell"><div class="l">±35% 이상 출렁 월</div><div class="v">8 / 24</div></div>
-      <div class="cell"><div class="l">최근 주간 볼륨 범위</div><div class="v">28–88 km</div></div>
-      <div class="cell"><div class="l">23개월 이지-HR 변화</div><div class="v">+0 bpm</div></div>
+      <div class="cell"><div class="l">볼륨 증가률 (${w.weeks}주)</div><div class="v">${_vg ? '×' + _vg.toFixed(1) : '—'}</div></div>
+      <div class="cell"><div class="l">±35% 이상 변동 월</div><div class="v">${_sw.tot ? _sw.n + ' / ' + _sw.tot : '—'}</div></div>
+      <div class="cell"><div class="l">최근 주간 볼륨 범위</div><div class="v">${_wr ? _wr.min + '–' + _wr.max + ' km' : '—'}</div></div>
+      <div class="cell"><div class="l">이지-HR 변화${_eh ? ' (' + _eh.fromLabel + '→' + _eh.toLabel + ')' : ''}</div><div class="v">${_eh ? (_eh.delta >= 0 ? '+' : '') + _eh.delta + ' bpm' : '—'}</div></div>
     </div>
-    <div class="caption" style="margin-top:6px">최근 10주간 트레이닝 부하(km) — 큰 폭의 변동이 진행상 문제를 대변한다.</div>
+    <div class="caption" style="margin-top:6px">${capRecentWeeks(D)}</div>
     <div class="chart" id="chart-weeks" style="margin-top:8px"></div>
   `;
   root.appendChild(sec3);
@@ -1058,7 +1160,7 @@ function render(D) {
   const sec4 = el('section', { class: 'section pagebreak' });
   sec4.innerHTML = `
     ${sectionHeadHTML('04', '트레이닝 볼륨', '월간 · 키로미터')}
-    <p>관측 기간 동안 러닝 볼륨은 3배로 증가했으며, 2025년 중반부터는 월 200–300 km 구간의 기반을 안정적으로 유지한다. 그러나 월간 변동성은 여전히 크다 — 발견 03 참고.</p>
+    <p>${capVolume(D)}</p>
     <div class="chart" id="chart-vol"></div>
     <div class="legend">
       <span><span class="sw" style="background:${PAL.accent}"></span>러닝 km</span>
@@ -1077,12 +1179,12 @@ function render(D) {
     <div class="col-2">
       <div>
         <h3>평균 페이스 · 분/km</h3>
-        <p style="color:var(--muted); font-size:12.5px">숫자가 작을수록 빠르다. 월평균 이지 페이스는 6분 중반대에서 초반대로 떨어졌다가, 2026년 1월 의도된 기반기 블록으로 7:36까지 올라왔다.</p>
+        <p style="color:var(--muted); font-size:12.5px">${capPace(D)}</p>
         <div class="chart" id="chart-pace"></div>
       </div>
       <div>
         <h3>평균 심박수 · bpm</h3>
-        <p style="color:var(--muted); font-size:12.5px">심박수는 노력 강도를 가장 정직하게 보여주는 지표다. 거의 모든 구간에서 130대 초·중반에 머물러 있는데, §06에서 보이듯 바로 이 안정성이 문제의 핵심이다.</p>
+        <p style="color:var(--muted); font-size:12.5px">${capHr(D)}</p>
         <div class="chart" id="chart-hr"></div>
       </div>
     </div>
@@ -1103,7 +1205,7 @@ function render(D) {
   const sec6 = el('section', { class: 'section pagebreak' });
   sec6.innerHTML = `
     ${sectionHeadHTML('06', '유산소 효율', '핵심 인사이트 · HR vs 페이스')}
-    <p>HR 기록이 있는 800회 이상의 세션을 평균 내어 페이스 대비 노력(HR)을 그렸다. 우상향 곡선은 깔끔하고 일관적이다 — 빠른 페이스일수록 높은 HR이 필요하다. 이것은 일관된 유산소 엔진의 증거다. 핵심은 대부분의 트레이닝이 발생하는 <b>이지 구간(6:00–6:30 /km)</b>에 있다.</p>
+    <p>HR과 페이스가 함께 기록된 ${hrSessionCount(D)}회 이상의 세션을 페이스 구간별로 평균 내어 노력(HR) 대비 페이스를 그렸습니다. 우상향 곡선은 빠른 페이스일수록 더 높은 심박이 필요함을 보여줍니다. 핵심은 대부분의 훈련이 일어나는 <b>이지 구간(6:00–6:30 /km)</b>입니다.</p>
     <div class="chart" id="chart-hrpace"></div>
     <div class="legend">
       <span><span class="sw" style="background:${PAL.accent}; opacity:0.18; border:1px solid ${PAL.accent}"></span>페이스 구간 · 원의 면적 = 세션 수</span>
@@ -1111,9 +1213,9 @@ function render(D) {
     </div>
     <div class="col-2" style="margin-top:26px; align-items:start;">
       <div>
-        <h3>정체 구간, 눈에 보이다</h3>
-        <p>이지 구간 세션만 골라 반기 단위로 집계하면 제한 요인이 드러난다. 볼륨이 3배로 늘어난 동안에도 <b>평균 이지 HR은 23개월간 거의 움직이지 않았다</b>. 선이 평탄하다 — 같은 노력에서 유산소 엔진의 효율이 개선되지 않았음을 의미한다.</p>
-        <div class="pull">"3배 볼륨 증가 → 이지 구간 경제성 0 bpm."</div>
+        <h3>${effHeadline(D)}</h3>
+        <p>${effNarrative(D)}</p>
+        <div class="pull">${effPull(D)}</div>
       </div>
       <div class="chart" id="chart-easy"></div>
     </div>
@@ -1168,7 +1270,7 @@ function render(D) {
   const sec8 = el('section', { class: 'section pagebreak' });
   sec8.innerHTML = `
     ${sectionHeadHTML('08', '장거리 러닝 추이', '월별 최장 거리 · KM')}
-    <p>2024년 10월 이후로 하프·풀코스 거리의 장거리 러닝이 반복적으로 수행되고 있다. 2025년 12월 100&nbsp;km 울트라는 이 기록 전체를 왜곡하는 이상치(outlier) 이벤트다 — 발견 04 참고.</p>
+    <p>${capLongRuns(D)}</p>
     <div class="chart" id="chart-long"></div>
   `;
   root.appendChild(sec8);
@@ -1204,37 +1306,22 @@ function render(D) {
   `;
   root.appendChild(sec10);
 
-  // -------- Recommendations ----------
+  // -------- Recommendations (coach-generated, per athlete) ----------
   const sec11 = el('section', { class: 'section' });
+  const _ap = D.diagnosis.action_plan || [];
+  const _recs = _ap.length
+    ? _ap.map((r, i) => `
+      <div class="rec">
+        <div class="tag"><span>${r.tag || '액션'}</span><span class="num">${String(i + 1).padStart(2, '0')} / ${String(_ap.length).padStart(2, '0')}</span></div>
+        <h3>${r.title || ''}</h3>
+        <p>${r.detail || ''}</p>
+        ${r.how ? `<div class="how">${r.how.replace(/^(구체 액션|근거)\s*:?\s*/, '<b>$1:</b> ')}</div>` : ''}
+      </div>`).join('')
+    : `<div class="rec"><p>아직 코치 제언이 준비되지 않았어요 — 채팅에서 "훈련 계획 짜줘"로 분석을 갱신하면 이 선수 데이터에 맞춘 액션이 채워집니다.</p></div>`;
   sec11.innerHTML = `
     ${sectionHeadHTML('11', '코칭 제언', '코치의 권장 사항')}
-    <p>제한 요인으로부터 직접 도출된 4가지 액션. 향후 12–16주 안에 누적된 볼륨을 측정 가능한 유산소 효율로 전환하는 것이 목표다.</p>
-    <div class="recs">
-      <div class="rec">
-        <div class="tag"><span>주기화</span><span class="num">01 / 04</span></div>
-        <h3>부하를 고르게 쌓는다.</h3>
-        <p>±35%의 월간 출렁을 3주 증량 / 1주 디로드의 주간 진행 패턴으로 교체한다. 월 단위 볼륨 변화를 ≤ 15%로 제한하고, 주간 증량 한도는 +10%로 잡는다.</p>
-        <div class="how"><b>구체 액션:</b> 향후 8주 목표 48 / 52 / 56 / 40 / 56 / 60 / 64 / 46 km — 최근 변동계수 34% → ≤ 15%.</div>
-      </div>
-      <div class="rec">
-        <div class="tag"><span>일관성</span><span class="num">02 / 04</span></div>
-        <h3>최저 주간 볼륨을 지킨다.</h3>
-        <p>테이퍼·부상 구간이 아니라면 30 km 미만의 주는 제거한다. 최근 블록의 28 km / 18 km 같은 주는 자극 사슬을 끊으며 변동성의 꼬리 역할을 한다.</p>
-        <div class="how"><b>구체 액션:</b> 주간 하한선 = ${Math.round(t.avg_weekly_run_km * 0.7)} km. 가장 가벼운 비테이퍼 주에도 이지 8 km × 4회를 유지한다.</div>
-      </div>
-      <div class="rec">
-        <div class="tag"><span>효율 블록</span><span class="num">03 / 04</span></div>
-        <h3>전환 블록을 돌린다.</h3>
-        <p>8주 동안 이지 페이스를 6:00–6:30 /km 내에 고정하고 주간 50–55 km를 일정하게 유지한다. 매주 토요일 10 km · 6:15 페이스 고정 세션에서 HR 드리프트를 추적한다 — 8주 차 목표 −4 bpm.</div>
-        <div class="how"><b>근거:</b> 제한 요인이 유산소 정체이므로, 추가 km가 아니라 기존 볼륨을 HR 경제성으로 전환하는 것이 레버리지 포인트다.</div>
-      </div>
-      <div class="rec">
-        <div class="tag"><span>퀄리티 유지</span><span class="num">04 / 04</span></div>
-        <h3>양극화된 분포를 유지한다.</h3>
-        <p>HR 기준 58 / 24 / 18 분포는 건강하다 — 효율 블록 중에도 평준화하지 않는다. 주 1회 퀄리티 세션(템포 또는 VO₂)과 장거리 러닝은 계속 유지한다.</p>
-        <div class="how"><b>구체 액션:</b> 주 1회 5k · km당 3:50 반복(reps) 또는 8 × 3분 · km당 3:40 — 이지 훈련이 경제성을 재구축하는 동안 상단 스피드를 보호한다.</div>
-      </div>
-    </div>
+    <p>제한 요인에서 직접 도출한, 이 선수에게 맞춘 실행 항목입니다.</p>
+    <div class="recs">${_recs}</div>
   `;
   root.appendChild(sec11);
 
@@ -1243,7 +1330,7 @@ function render(D) {
   ftr.innerHTML = `
     <div>
       <b>방법론.</b><br>
-      COROS / Garmin / Strava 디바이스 내보내기에서 활동이 수집되었다. 세션 종류는 거리 기반으로 추론되며(워크아웃 메타데이터 없음), 강도 밴드는 HR×페이스 구간에서 추론된다. HR 기록이 있는 n = 800 세션에서 상관계수 r = −0.65.
+      COROS / Garmin / Strava 디바이스 내보내기에서 활동이 수집되었다. 세션 종류는 거리 기반으로 추론되며(워크아웃 메타데이터 없음), 강도 밴드는 HR×페이스 구간에서 추론된다. 페이스–HR 관계는 HR이 기록된 n = ${hrSessionCount(D)} 세션 표본에서 집계했다.
     </div>
     <div class="right">
       <b>면책조항.</b><br>

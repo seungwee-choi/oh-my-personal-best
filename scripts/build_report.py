@@ -165,7 +165,10 @@ def build_report_data(home):
         "easy_hr_by_half": easy_hr_by_half,
         "recent_weeks_km": recent,
         "diagnosis": {"summary": as_text(diag.get("summary")), "limiter": as_text(diag.get("limiter")),
-                      "observations": [as_text(o) for o in (diag.get("observations") or [])]},
+                      "limiter_headline": as_text(diag.get("limiter_headline")),
+                      "observations": [as_text(o) for o in (diag.get("observations") or [])],
+                      "action_plan": [{k: as_text(it.get(k)) for k in ("tag", "title", "detail", "how")}
+                                      for it in (diag.get("action_plan") or []) if isinstance(it, dict)]},
         "_has_diagnosis": bool(diag.get("summary")),
     }
 
