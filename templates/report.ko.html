@@ -902,7 +902,8 @@ function chartLongRuns(data) {
   const innerW = W - pad.l - pad.r;
   const innerH = H - pad.t - pad.b;
 
-  const ymax = 110;
+  const dataMax = Math.max(21.1, ...data.map(d => d.longest_km || 0));  // floor: keep the half-marathon ref in view
+  const ymax = Math.ceil(dataMax * 1.12);                              // frame the athlete's actual long runs
   const x = scale(0, data.length - 1, pad.l + 6, pad.l + innerW - 6);
   const y = scale(0, ymax, pad.t + innerH, pad.t);
 
@@ -914,7 +915,7 @@ function chartLongRuns(data) {
 
   // gridlines
   let grid = '';
-  [0, 21.1, 42.2, 100].forEach((v, i) => {
+  [0, 21.1, 42.2, 100].filter(v => v <= ymax).forEach((v, i) => {
     const isMarathon = v === 42.2;
     const isUltra = v === 100;
     const isHalf = v === 21.1;
@@ -942,8 +943,8 @@ function chartLongRuns(data) {
     if (isUltra) {
       dots += `
         <line x1="${x(i)}" x2="${x(i)}" y1="${y(d.longest_km) - 8}" y2="${y(d.longest_km) - 22}" stroke="${PAL.ink}" stroke-width="1"/>
-        <text x="${x(i)}" y="${y(d.longest_km) - 26}" text-anchor="middle" font-family="ui-monospace, Menlo, monospace" font-size="10" font-weight="700" fill="${PAL.ink}">100 KM 울트라</text>
-        <text x="${x(i)}" y="${y(d.longest_km) - 38}" text-anchor="middle" font-family="ui-monospace, Menlo, monospace" font-size="9" fill="${PAL.muted}">${fmt.monthLong(d.month)} · 13.2시간 · HR 133</text>`;
+        <text x="${x(i)}" y="${y(d.longest_km) - 26}" text-anchor="middle" font-family="ui-monospace, Menlo, monospace" font-size="10" font-weight="700" fill="${PAL.ink}">${Math.round(d.longest_km)} KM</text>
+        <text x="${x(i)}" y="${y(d.longest_km) - 38}" text-anchor="middle" font-family="ui-monospace, Menlo, monospace" font-size="9" fill="${PAL.muted}">${fmt.monthLong(d.month)} 최장</text>`;
     }
   });
 
@@ -1048,7 +1049,7 @@ function render(D) {
       <div class="cell"><div class="l">최근 주간 볼륨 범위</div><div class="v">28–88 km</div></div>
       <div class="cell"><div class="l">23개월 이지-HR 변화</div><div class="v">+0 bpm</div></div>
     </div>
-    <div class="caption" style="margin-top:6px">최근 10주간 트레이닝 부하(km) — 큰 폭의 변동이 진행상 문제를 대변한다.</div>
+    <div class="caption" style="margin-top:6px">최근 10주간 주간 트레이닝 부하(km). 주차별 일관성과 점증 추이를 함께 확인하세요.</div>
     <div class="chart" id="chart-weeks" style="margin-top:8px"></div>
   `;
   root.appendChild(sec3);
@@ -1058,7 +1059,7 @@ function render(D) {
   const sec4 = el('section', { class: 'section pagebreak' });
   sec4.innerHTML = `
     ${sectionHeadHTML('04', '트레이닝 볼륨', '월간 · 키로미터')}
-    <p>관측 기간 동안 러닝 볼륨은 3배로 증가했으며, 2025년 중반부터는 월 200–300 km 구간의 기반을 안정적으로 유지한다. 그러나 월간 변동성은 여전히 크다 — 발견 03 참고.</p>
+    <p>관측 기간 동안의 월간 러닝 볼륨 추이입니다. 볼륨의 증가세와 월별 변동(일관성)을 함께 살펴보세요.</p>
     <div class="chart" id="chart-vol"></div>
     <div class="legend">
       <span><span class="sw" style="background:${PAL.accent}"></span>러닝 km</span>
@@ -1077,12 +1078,12 @@ function render(D) {
     <div class="col-2">
       <div>
         <h3>평균 페이스 · 분/km</h3>
-        <p style="color:var(--muted); font-size:12.5px">숫자가 작을수록 빠르다. 월평균 이지 페이스는 6분 중반대에서 초반대로 떨어졌다가, 2026년 1월 의도된 기반기 블록으로 7:36까지 올라왔다.</p>
+        <p style="color:var(--muted); font-size:12.5px">숫자가 작을수록 빠릅니다. 월평균 페이스의 변화 추이입니다.</p>
         <div class="chart" id="chart-pace"></div>
       </div>
       <div>
         <h3>평균 심박수 · bpm</h3>
-        <p style="color:var(--muted); font-size:12.5px">심박수는 노력 강도를 가장 정직하게 보여주는 지표다. 거의 모든 구간에서 130대 초·중반에 머물러 있는데, §06에서 보이듯 바로 이 안정성이 문제의 핵심이다.</p>
+        <p style="color:var(--muted); font-size:12.5px">심박수는 노력 강도를 보여주는 지표입니다. 월별 평균 심박수의 추이로, §06의 동일 페이스 대비 심박 변화와 함께 보면 유산소 효율의 변화를 읽을 수 있습니다.</p>
         <div class="chart" id="chart-hr"></div>
       </div>
     </div>
@@ -1168,7 +1169,7 @@ function render(D) {
   const sec8 = el('section', { class: 'section pagebreak' });
   sec8.innerHTML = `
     ${sectionHeadHTML('08', '장거리 러닝 추이', '월별 최장 거리 · KM')}
-    <p>2024년 10월 이후로 하프·풀코스 거리의 장거리 러닝이 반복적으로 수행되고 있다. 2025년 12월 100&nbsp;km 울트라는 이 기록 전체를 왜곡하는 이상치(outlier) 이벤트다 — 발견 04 참고.</p>
+    <p>월별 최장 거리 추이입니다. 장거리 러닝의 빈도와 거리가 목표 레이스 준비에 충분한지 보여줍니다.</p>
     <div class="chart" id="chart-long"></div>
   `;
   root.appendChild(sec8);
