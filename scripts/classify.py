@@ -18,6 +18,14 @@ perfect — we use the avg→max HR spread as the discriminator (intervals swing
 holds). Calibration is HR-max-anchored (%HRmax), falling back to pace-only or 'easy'
 when HR is absent. ``race`` is never auto-inferred (needs a name/flag); ``cross``/
 ``rest`` are out of scope here.
+
+Pace sanity guard: HR can spike from heat, hills, cardiac drift, or stop-and-go
+running, so a single peak with a big avg→max swing isn't enough to call a session a
+workout. A real tempo/interval is never slower, on session average, than this runner's
+easy-slow pace — so the quality labels are withheld when the average pace is slower
+than that band (and pace data exists). That combination is a fatigued/terrain easy run,
+not a workout; without the guard one HR spike on an 18 km easy run mislabels it interval
+and blurs the intensity distribution.
 """
 from __future__ import annotations
 
@@ -118,19 +126,28 @@ def refine(actual: Optional[dict], distance_km: Optional[float], ref: Dict,
     pace = _pace_to_sec(a.get("pace"))
     spread = (mx - avg) if (mx and avg) else None
 
+    # Pace sanity guard for the quality labels (interval/tempo): an HR peak can come from
+    # heat, hills, drift, or stop-and-go running, so we refuse a workout label when the
+    # session's average pace is slower than this runner's easy-slow band. A genuine
+    # tempo/interval (even with recovery jogs averaged in) never runs that slow. When pace
+    # is unknown we can't check, so the guard stays off and HR alone decides as before.
+    quality_pace_ok = not (pace is not None and ref.get("easy_slow") and pace > ref["easy_slow"])
+
     # Endurance is distance-first (a marathon-pace long run is still a long run).
     if distance_km is not None and distance_km >= long_km:
         return "long"
 
-    # Interval: a high peak with a big avg→max swing (repeats with recovery between).
+    # Interval: a high peak with a big avg→max swing (repeats with recovery between),
+    # confirmed by a pace fast enough to be real work.
     if (ref.get("hard_hr") and ref.get("spread_interval")
             and mx and avg and mx >= ref["hard_hr"] and spread is not None
-            and spread >= ref["spread_interval"]):
+            and spread >= ref["spread_interval"] and quality_pace_ok):
         return "interval"
 
     # Tempo: sustained high HR held steady (small spread) — threshold / cruise.
     if (ref.get("tempo_hr") and avg and avg >= ref["tempo_hr"]
-            and (spread is None or spread <= ref.get("spread_steady", 1e9))):
+            and (spread is None or spread <= ref.get("spread_steady", 1e9))
+            and quality_pace_ok):
         return "tempo"
 
     # Recovery: genuinely low HR, slow, AND short (regeneration — not just any easy run,

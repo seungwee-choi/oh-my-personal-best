@@ -43,6 +43,19 @@ def test_easy_is_the_default():
     assert classify.refine(_a(avg_hr=140, max_hr=150, pace="6:00"), 10.0, REF) == "easy"
 
 
+def test_pace_guard_withholds_quality_on_slow_runs():
+    # An 18 km easy run with ONE HR spike (low avg, high max) is NOT an interval:
+    # its average pace is slower than the easy-slow band, so the workout label is withheld.
+    assert classify.refine(_a(avg_hr=140, max_hr=185, pace="7:09"), 18.0, REF) == "easy"
+    # A slow stop-and-go / hot-day jog isn't tempo either, even with a high avg HR.
+    assert classify.refine(_a(avg_hr=158, max_hr=170, pace="7:30"), 6.0, REF) == "easy"
+    # But the same HR shape at a genuinely fast pace stays a workout (guard is pace-gated).
+    assert classify.refine(_a(avg_hr=150, max_hr=185, pace="4:30"), 10.0, REF) == "interval"
+    assert classify.refine(_a(avg_hr=158, max_hr=164, pace="4:20"), 9.0, REF) == "tempo"
+    # No pace data → can't check → HR alone decides, as before (guard stays off).
+    assert classify.refine(_a(avg_hr=150, max_hr=185), 10.0, REF) == "interval"
+
+
 def test_pace_only_fallback_without_hr():
     assert classify.refine(_a(pace="4:20"), 10.0, REF) == "tempo"     # fast
     assert classify.refine(_a(pace="7:10"), 6.0, REF) == "recovery"   # very slow + short
