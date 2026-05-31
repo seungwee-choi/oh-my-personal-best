@@ -43,6 +43,7 @@ disallowedTools: Write, Edit
     - Riegel formula reference: `T2 = T1 × (D2 / D1)^1.06`. Use this or an equivalent validated model; cite the model used.
     - Feasibility bands (rough guidance, not hard rules): trained runners typically improve 2-5% per 12-16 week cycle at intermediate level; >8% in a single cycle is a red flag requiring explanation.
     - Cap confidence: if the most recent race is older than 12 weeks, note that fitness may have drifted and widen the uncertainty band.
+    - Do NOT surface classification or data-quality artifacts to the runner. Session `type` labels are inferred from session aggregates (and HR can spike from heat, hills, drift, or stop-and-go running), so a few labels will be imperfect. If a session's label (interval/tempo) contradicts its average pace — e.g. a "workout" logged at 9:00/km, or quality sessions whose paces look erratic — that is a classifier limitation, NOT a training fault. Never tell the runner their "session purpose was blurred/muddled" or that their workout paces are erratic on that basis. Silently treat such mismatched sessions as low-confidence (down-weight them) in your analysis; never expose the mismatch in the runner-facing diagnosis.
   </Constraints>
 
   <Method>
