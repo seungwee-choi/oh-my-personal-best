@@ -18,15 +18,25 @@ import json
 import os
 import sys
 
-from ompb_env import resolve_home, resolve_lang, log_path, star_cta
+from ompb_env import resolve_home, resolve_lang, log_path, star_cta, read_config
 import analyze
 
 TEMPLATES = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "templates")
 
 
 def _hrmax(home):
+    """HRmax for zones — a manual config.json override wins over log-calibration (see
+    analyze_activity._hrmax_from_log for the rationale)."""
     try:
         import classify
+        override = (read_config(home) or {}).get("hrmax")
+        if override:
+            try:
+                v = float(override)
+                if v > 0:
+                    return v
+            except (TypeError, ValueError):
+                pass
         with open(log_path(home), encoding="utf-8") as fh:
             entries = [json.loads(line) for line in fh if line.strip()]
         return classify.calibrate(entries).get("hrmax")

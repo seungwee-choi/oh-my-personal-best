@@ -21,11 +21,22 @@ import analyze
 
 
 def _hrmax_from_log(home):
-    """The runner's calibrated HRmax (for time-in-zone / hard-effort zones), or None."""
+    """The runner's HRmax for time-in-zone / hard-effort zones, or None. A manual override in
+    config.json (``hrmax``) wins over log-calibration — so a runner who never logged a true max
+    effort (which biases the calibrated estimate low) can correct their zones explicitly."""
     try:
-        from ompb_env import resolve_home, log_path
+        from ompb_env import resolve_home, log_path, read_config
         import classify
-        with open(log_path(resolve_home(home)), encoding="utf-8") as fh:
+        h = resolve_home(home)
+        override = (read_config(h) or {}).get("hrmax")
+        if override:
+            try:
+                v = float(override)
+                if v > 0:
+                    return v
+            except (TypeError, ValueError):
+                pass
+        with open(log_path(h), encoding="utf-8") as fh:
             entries = [json.loads(line) for line in fh if line.strip()]
         return classify.calibrate(entries).get("hrmax")
     except Exception:  # noqa: BLE001 — zones are best-effort
