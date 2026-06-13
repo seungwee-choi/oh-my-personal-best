@@ -32,6 +32,39 @@ def read_config(home):
     return {}
 
 
+def write_config(home, updates):
+    """Merge ``updates`` into $OMPB_HOME/config.json and persist (preserving other keys, e.g.
+    language). Existing settings the caller didn't touch are kept. Best-effort: a failed write
+    must not crash a coaching turn — returns the merged dict it attempted to write."""
+    cfg = read_config(home)
+    cfg.update(updates)
+    p = os.path.join(home, "config.json")
+    try:
+        os.makedirs(home, exist_ok=True)
+        with open(p, "w", encoding="utf-8") as fh:
+            json.dump(cfg, fh, ensure_ascii=False, indent=2)
+    except OSError:
+        pass
+    return cfg
+
+
+def local_today(tz="Asia/Seoul"):
+    """The runner-local 'today' as a ``datetime.date``.
+
+    OMPB stores activity dates in the runner's local calendar (KST in the reference
+    deployment), and onset/relative-date parsing ("어제", "N일째") and "is the export stale?"
+    checks must agree with that calendar — UTC ``date.today()`` rolls over at the wrong hour.
+    Uses the stdlib zoneinfo when available, else a fixed +9h offset for the default KST tz.
+    """
+    import datetime as _dt
+    try:
+        from zoneinfo import ZoneInfo
+        return _dt.datetime.now(ZoneInfo(tz)).date()
+    except Exception:  # noqa: BLE001 — no tzdata / unknown tz → fixed-offset fallback
+        offset = 9 if tz == "Asia/Seoul" else 0
+        return (_dt.datetime.now(_dt.timezone.utc) + _dt.timedelta(hours=offset)).date()
+
+
 def resolve_lang(explicit, home):
     """Output/communication language: explicit flag > config.json `language` > 'en'."""
     if explicit in ("en", "ko"):

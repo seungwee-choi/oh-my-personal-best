@@ -40,6 +40,15 @@ ompb.export_report(fmt="pdf")          # -> static PDF/PNG via a headless browse
 ompb.reclassify()                      # calibrated re-typing of the whole log
 ompb.analyze_activity("strava-123")    # one activity: structure/reps/pacing/decoupling/zones/GAP
 ompb.build_activity("strava-123")      # -> that analysis as a self-contained HTML card
+
+# Coaching domains promoted from the end-user surfaces (one source of truth for every surface):
+ompb.injury_snapshot()                 # active injury + return-to-run phase (the plan guardrail)
+ompb.injury_parse(text); ompb.injury_create(...); ompb.injury_checkin(...); ompb.injury_resolve(...)
+ompb.body_summary(); ompb.log_weight(weight_kg=62.5); ompb.set_target_weight(60)
+ompb.zones(); ompb.set_hrmax(190)      # HR-zone table + manual HRmax override (config.json)
+ompb.weather_forecast(); ompb.weather_advise(day)   # Met.no + AQI, cached 2h
+ompb.week_overview(); ompb.week_review_aggregate(); ompb.week_review_status()  # plan↔actual adherence
+ompb.detect_insights()                 # "와우 모먼트" — trends / self-PRs / hidden signals
 ```
 
 Read paths import the script helpers in-process; write/render paths invoke the

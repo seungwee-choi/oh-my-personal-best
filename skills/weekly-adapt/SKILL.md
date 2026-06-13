@@ -24,22 +24,30 @@ ignores what happened last week is not a plan; it is a wish list.
 
 <Steps>
 
-## Step 1 — Collect and Aggregate Actuals (data-logger)
+## Step 1 — Collect and Aggregate Actuals (data-logger + deterministic adherence)
 
-Invoke `oh-my-personal-best:data-logger` to collect and aggregate this week's training data.
+If the runner provided check-in notes in `$ARGUMENTS`, pass them to `oh-my-personal-best:data-logger`
+first (natural-language path) so any new sessions are normalized into `training-log.jsonl` before
+aggregation.
 
-If the runner provided check-in notes in `$ARGUMENTS`, pass them to data-logger for ingestion
-first (natural-language path). data-logger normalizes any new entries into `training-log.jsonl`.
+Then compute the week's adherence DETERMINISTICALLY (don't hand-tally):
+```
+python3 "$CLAUDE_PLUGIN_ROOT/scripts/review.py" aggregate --offset 0   # or ompb_core.week_review_aggregate(home, 0)
+```
+This overlays `plan-week.json` on the actual runs and returns the evidence base every downstream
+agent uses: per-day adherence verdicts (done / skipped / upcoming / rest_kept / unplanned /
+**skipped_injury**), adherence % (completed/planned), planned↔actual volume vs `target_km`,
+key-session execution (`key_done`/`key_planned`), and goal + injury context. A session missed
+*during an active injury* is `skipped_injury` (recovery), never a penalised lapse — read it that way.
+data-logger's intensity-distribution summary complements this. Do not proceed until the aggregate
+is in hand.
 
-data-logger then produces the weekly summary:
-- Planned sessions (from plan-state.json `key_sessions`) vs. actual sessions logged
-- Compliance rate: sessions completed / sessions planned (%)
-- Total actual volume (km) vs. `this_week_target_km`
-- Intensity distribution: count by session type (easy / tempo / interval / long / rest / missed)
-- Missed sessions: date, type, and whether the runner noted a reason
-
-This summary is the evidence base for all downstream agents. Do not proceed until data-logger
-confirms the aggregation is complete.
+**Retrospective review vs. adaptation — keep them separate.** The weekly *review* (Step 6's "this
+week" narrative) is a look back; the *adaptation* (Steps 4–5) sets next week. A review NEVER
+prescribes specific sessions ("go run X today") — that's the plan's job. And do not auto-generate a
+"week complete" review for an INCOMPLETE week: use `week_review_status(home, 0).ready` — only `True`
+(the last planned training day is today-or-past and done, nothing past-due still pending, ≥1 run
+logged) means the week is reviewable as finished. Mid-week, adapt forward without a finished-week verdict.
 
 ## Step 2 — Compliance and Fatigue Assessment (race-analyst)
 
@@ -142,8 +150,11 @@ constraint to the runner.
 
 After `critic_approved: true` is set, deliver to the runner:
 
-1. **This week's summary**: compliance rate, actual vs. planned volume, key observations from
-   race-analyst (one sentence on fitness trend).
+1. **This week's review** (retrospective): adherence % and actual vs. planned volume from the Step 1
+   aggregate, key-session execution, and a short week-as-a-whole narrative. For the narrative use
+   `ompb_core.week_review_prompt(home, 0)` — it carries the rules (read the week as a whole, one
+   next-week DIRECTION as a principle, **no specific-session prescription**, no invented numbers,
+   warm tone even when sessions were missed). One sentence on the fitness trend from race-analyst.
 2. **Physio status**: GREEN / YELLOW / RED verdict and any active directives (if YELLOW, what
    was modified and why).
 3. **Next week's plan**: the adapted `this_week_target_km`, key session types, and any changes

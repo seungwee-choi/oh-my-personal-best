@@ -24,7 +24,10 @@ Persistent runner state lives under OMPB_HOME (smart-resolved: $OMPB_HOME -> ~/.
 - `$OMPB_HOME/training-log.jsonl` — append-only daily sessions (planned vs actual: distance, pace, HR, RPE)
 - `$OMPB_HOME/pb-history.json` — personal-best timeline
 - `$OMPB_HOME/plan-state.json` — current periodization phase (Base/Build/Peak/Taper), this week's target load
-- `$OMPB_HOME/config.json` — app settings: `language` (`en`|`ko`, default `en`), set at `/pb-setup` and used for both communication and `--lang` of generated artifacts
+- `$OMPB_HOME/injuries.jsonl` — injury episodes + return-to-run phase ladder (owned by `physio-advisor` via `ompb_core.injury_*`; the single source the plan guardrail reads)
+- `$OMPB_HOME/body.jsonl` — weight + fueling log (trend / race weight / under-fueling; `ompb_core.body_*`, `fuel-advisor`)
+- `$OMPB_HOME/weather.json` — forecast cache (2h TTL, derived; `ompb_core.weather_forecast`)
+- `$OMPB_HOME/config.json` — app settings: `language` (`en`|`ko`, default `en`), optional `hrmax` override, and cached weather location `wx_*`; set at `/pb-setup` and used for both communication and `--lang` of generated artifacts
 
 Plugin scripts are invoked as `python3 "$CLAUDE_PLUGIN_ROOT/scripts/<name>.py"` (never as bare `scripts/<name>.py`).
 
@@ -61,16 +64,21 @@ Route by intent. Trivial lookups → answer directly or via `data-logger` (haiku
 | "풀코스 sub-3:30 만들고 싶어" / "I want to run a sub-3:30 marathon" | `race-plan` skill (analyst → architect → critic) |
 | "10K 50분인데 45분 가고 싶어, 16주 남음" | `race-plan` skill (goal back-calc + periodization) |
 | "오늘 뭐 뛰어?" / "what's my run today?" | `session-coach` (today's single session, fast) |
-| "무릎이 아픈데 롱런 해도 돼?" / knee hurts | `physio-advisor` (risk gate FIRST) |
+| "무릎이 아픈데 롱런 해도 돼?" / knee hurts / "아킬레스 다쳤어" | `pb-injury` skill → `physio-advisor` (risk gate FIRST; tracks the episode + return-to-run ladder) |
+| "다시 뛰어도 돼?" / "복귀 어떻게 해?" / recovery check-in | `pb-injury` (return-to-run ladder check-in) |
 | "레이스 3일 전인데 뭐 먹어?" | `fuel-advisor` + `pace-strategist` |
+| "오늘 체중 62.5" / "레이스 체중 목표" / "weighed in" / "살 빠지는데 괜찮아?" | `pb-body` skill → `fuel-advisor` (weight trend + fueling) |
+| "오늘 뛰기 어때?" / "날씨 보고 조정" / "what's it like to run today?" | `pb-weather` skill → `session-coach` (forecast + AQI-aware) |
+| "내 하이라이트" / "뭐 좋아졌어?" / "show my progress" / "any wins lately?" | `pb-insights` skill (와우 모먼트 — trends/PRs/hidden signals) |
 | "지난주 기록 어땠어?" / "log: ran 10K in 50:00" | `data-logger` |
-| "이번 주 계획 조정해줘" / weekly check-in | `weekly-adapt` skill |
+| "이번 주 계획 조정해줘" / weekly check-in / "한 주 리뷰" | `weekly-adapt` skill (deterministic adherence + retrospective review; no prescription for an incomplete week) |
 | "다음 주가 대회야" / race is next week | `race-week` skill (parallel consult) |
 | "내 데이터 보여줘" / "make a report" / "시각자료로" / "report" / "리포트" / "분석 리포트" / "PDF" / "assessment" | `pb-report` skill (comprehensive print/PDF-ready report) |
 | "this week" / "weekly plan" / "주간 계획" / "이번 주 훈련표" / "training schedule" | `pb-week` skill (weekly plan card) |
+| "내 훈련 존" / "HRmax 190이야" / "zones" | `ompb_core.zones` / `set_hrmax` (HR-zone table + manual override) |
 | "connect strava" / "스트라바 연동" / "sync strava" | `pb-connect-strava` skill |
 
-Keyword triggers (auto-detect): `"setup" / "처음" / "시작하기" / "get started"` or first run with empty OMPB_HOME → `pb-setup`; `"race plan" / "훈련 계획" / "sub-N" / goal time` → `race-plan`; `"weekly" / "이번 주" / "adjust"` → `weekly-adapt`; `"race week" / "대회 D-7" / "taper"` → `race-week`; `"report" / "리포트" / "PDF" / "시각자료" / "visualize"` → `pb-report`; `"week" / "주간" / "weekly plan"` → `pb-week`; `"strava" / "스트라바"` → `pb-connect-strava`.
+Keyword triggers (auto-detect): `"setup" / "처음" / "시작하기" / "get started"` or first run with empty OMPB_HOME → `pb-setup`; `"race plan" / "훈련 계획" / "sub-N" / goal time` → `race-plan`; `"weekly" / "이번 주" / "adjust" / "한 주 리뷰"` → `weekly-adapt`; `"race week" / "대회 D-7" / "taper"` → `race-week`; `"report" / "리포트" / "PDF" / "시각자료" / "visualize"` → `pb-report`; `"week" / "주간" / "weekly plan"` → `pb-week`; `"strava" / "스트라바"` → `pb-connect-strava`; `"아파" / "부상" / "다쳤" / pain / injury / sore` → `pb-injury` (safety FIRST); `"체중" / "weight" / "레이스 체중" / fueling` → `pb-body`; `"날씨" / "weather" / "오늘 뛰기"` → `pb-weather`; `"하이라이트" / "highlight" / "와우" / "progress" / "좋아졌"` → `pb-insights`.
 </routing>
 
 <skills>
@@ -82,8 +90,12 @@ End-to-end workflows covering the full training lifecycle:
 - `pb-report` — **comprehensive print/PDF-ready athlete report**: `race-analyst` diagnosis + `scripts/build_report.py` → self-contained HTML at `$OMPB_HOME/reports/` (inline SVG charts, print/PDF-ready, fully offline).
 - `pb-week` — **weekly plan card**: render the current week's plan as a visual print-ready card (`session-coach` fills `$OMPB_HOME/plan-week.json` → `build_week.py`); the weekly companion to `/pb-today` (one day) and `/pb-plan` (whole block).
 - `pb-connect-strava` — connect a Strava account (user's own app + refresh token, OAuth via localhost) and sync activities; auto-refreshes.
+- `pb-injury` — **injury tracking & return-to-run**: `physio-advisor` triages (GREEN/YELLOW/RED), then captures the episode (confirm gate) and stages the return-to-run ladder; the active episode caps load + restricts workout types as a guardrail for `plan-architect`/`session-coach`. Safety-first entry for any pain signal.
+- `pb-weather` — **weather-aware coaching**: `session-coach` folds the local forecast + air quality (`ompb_core.weather_forecast`) into today's session (heat/humidity/AQI adjustments).
+- `pb-body` — **weight & fueling**: `fuel-advisor` reads the weight trend (`ompb_core.body_summary` — race weight, under-fueling, safe rate) and grounds nutrition advice in the trajectory.
+- `pb-insights` — **와우 모먼트**: a deterministic detector pipeline (`ompb_core.detect_insights`) surfaces cross-activity trends, self-relative PRs, and hidden signals; embedded in `pb-report`.
 
-Commands are thin dispatchers: `/pb-setup` → pb-setup, `/pb-plan` → race-plan, `/pb-today` → session-coach, `/pb-week` → pb-week, `/pb-log` → data-logger, `/pb-report` → pb-report, `/pb-connect-strava` → pb-connect-strava.
+Commands are thin dispatchers: `/pb-setup` → pb-setup, `/pb-plan` → race-plan, `/pb-today` → session-coach, `/pb-week` → pb-week, `/pb-log` → data-logger, `/pb-report` → pb-report, `/pb-connect-strava` → pb-connect-strava, `/pb-injury` → pb-injury, `/pb-weather` → pb-weather, `/pb-body` → pb-body, `/pb-insights` → pb-insights.
 </skills>
 
 <data_ingest>
@@ -101,7 +113,8 @@ Importers append to `$OMPB_HOME/training-log.jsonl` directly (validated, deduped
 </data_ingest>
 
 <safety>
-- Pain, injury, sharp/persistent discomfort, illness, dizziness, chest symptoms → STOP prescribing load; route to `physio-advisor`; escalate red flags (chest pain, etc.) to "seek medical care now."
+- Pain, injury, sharp/persistent discomfort, illness, dizziness, chest symptoms → STOP prescribing load; route to `pb-injury` / `physio-advisor`; escalate red flags (chest pain, etc.) to "seek medical care now."
+- A genuine injury becomes a TRACKED episode (`injuries.jsonl`) with a deterministic return-to-run ladder (rest → walk → walk_run → easy_only → build → full). While open, `ompb_core.injury_snapshot` caps weekly load (`load_cap_pct`) and restricts `allowed_types` — `plan-architect`/`session-coach` build INSIDE that cap; the guardrail overrides any training target until `physio-advisor` advances or clears the episode. Capture is behind a confirm gate (propose → confirm), never auto-written; phase advancement is decided by the deterministic ladder (`injury_checkin`), not motivation. A missed session during an open episode is recovery (`skipped_injury`), never a penalised lapse.
 - No medical diagnosis or treatment. Coaching boundary explicit.
 - Respect progressive overload: weekly volume increases capped (~10%/week default); `plan-critic` rejects unsafe ramps.
 </safety>

@@ -37,3 +37,30 @@ per-lap/stream 데이터를 보지 않으니 진짜 반복 구조와 우발적 H
 **수정 (2026-05, 완료).** `agents/race-analyst.md`의 `<Constraints>`에 가드 추가 —
 타입 라벨과 실제 페이스가 모순되는 세션은 분류기 한계(훈련 문제가 아님)로 보고,
 러너용 진단에 노출하지 말고 내부적으로 low-confidence로 down-weight하도록 명시했다.
+
+## 3. ompb-apps 도메인 로직의 core 승격 — 후속 과제 (2026-06)
+
+ompb-apps(end-user surfaces)가 앱 레이어에만 쌓아둔 도메인 로직을 플러그인 core로 승격하고
+코칭 표면에 노출했다 (계획: `docs/PLUGIN-PARITY-PLAN.md`). 완료분과 후속분:
+
+**완료.** `scripts/injury.py`·`body.py`·`weather.py`·`zones.py`·`review.py`(+`logquery.py`·
+`weekplan.py`)·`insights.py`(+`insight_detectors/`)를 stdlib-only로 승격, `ompb_core`에 노출
+(`injury_*`/`body_*`/`weather_*`/`zones`/`week_*`/`detect_insights`), STATE-SCHEMA·CLAUDE.md
+라우팅·agents(physio/fuel/session/plan)·skills(pb-injury/weather/body/insights)·테스트 추가.
+`ompb_core.query_log`/`weekly_load`는 `logquery`로 위임해 단일 소스화.
+
+**후속 (별도 PR).**
+- [ ] **ompb-apps dedup.** core 새 버전 릴리스 후 ompb-apps가 자기 `injury.py`/`body.py`/
+  `weather.py`/`zones.py`/`review.py`/`insights*` 대신 `ompb_core`를 소비하도록 전환 →
+  중복 제거(두 진실 소스 방지). core 의존 SHA bump이 트리거.
+- [ ] **build_report HTML 와우 모먼트 섹션.** 현재 pb-report는 insights를 `diagnosis.observations`로
+  녹여 렌더(템플릿 무변경). 전용 카드 섹션은 `templates/report*.html` + `build_report.py`
+  편집이 필요 — 후속.
+- [ ] **adherence 바 렌더.** `week_review_aggregate`의 adherence%는 계산·노출되지만, pb-week/
+  pb-report 카드의 시각 바는 템플릿 작업 필요 — 후속.
+- [ ] **일일 readiness 합성 신호.** 앱 `readiness.py`는 온보딩 단계 머신일 뿐 — 일일 훈련
+  readiness(load+injury+body 합성)는 신규. 보수적으로 설계해 session-coach 입력으로.
+- [ ] **strava athlete-city.** `weather.get_location`의 Strava 도시 자동조회는 플러그인에 해당
+  헬퍼가 없어 수동 위치 입력 폴백만 동작 — Strava 연동 경로에서 city를 채우면 자동화 가능.
+- [ ] **insights deep 신호.** `detect_insights(deep=True)`는 최근 Strava 런 ≤4건만 analyze
+  (rate-limit). zone/decoupling detector는 deep 없으면 no-op — 의도된 제한.

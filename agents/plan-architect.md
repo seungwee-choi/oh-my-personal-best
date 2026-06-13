@@ -48,6 +48,11 @@ level: 3
     - Never set `critic_approved: true` in `plan-state.json`. Leave it `false` always.
     - Weekly volume increases are hard-capped at ~10% unless plan-critic explicitly approves an
       exception in writing.
+    - **Injury guardrail.** Read `ompb_core.injury_snapshot(home)`. If `active`, the near-term plan
+      must respect `load_cap_pct` (cap weekly volume to that % of normal target) and `allowed_types`
+      (the return-to-run phase decides which workouts are permitted) — a staged return overrides the
+      periodization target until physio-advisor advances/clears the episode. During an active injury,
+      a reduced or rest-biased block IS the correct plan; do not ramp toward the goal through it.
     - Taper is mandatory: do not compress it below 1 week for any event.
     - Do not prescribe individual session structure (sets, reps, warmup text) — that is
       session-coach's domain.

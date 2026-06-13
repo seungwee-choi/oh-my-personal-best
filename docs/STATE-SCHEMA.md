@@ -131,6 +131,27 @@ shapes. Times are stored as `HH:MM:SS` or `MM:SS` strings; paces as `MM:SS` per 
 - `summary`, `limiter`, and `feasibility` MUST be plain strings. `observations` MUST be a list of strings. Downstream renderers (`build_report.py`) perform string operations on all four fields — writing any of them as a nested object or list will cause rendering errors.
 - If richer structure is useful, put it under an optional `detail` object key. Never make the three core fields objects.
 
+## `injuries.jsonl` (injury episodes — one episode per line, append/atomic-rewrite)
+Owned by `scripts/injury.py` (`ompb_core.injury_*`). The coach *advises* but this module is the
+single writer — capture is conservative (`injury_parse` only PROPOSES from text that has both a
+body-part token and a pain cue; the coach confirms before `injury_create` persists). Each episode
+carries a deterministic **return-to-run phase ladder** that the plan guardrail reads.
+```json
+{"id":"inj-<hex>","body_part":"knee|achilles|calf|hamstring|itb|shin|plantar|foot|hip|ankle|quad|glute|back","side":"left|right|both|null","label":"string","onset_date":"YYYY-MM-DD","severity":0,"status":"active|recovering|resolved","phase":"rest|walk|walk_run|easy_only|build|full","load_cap_pct":0,"notes":[{"date":"YYYY-MM-DD","text":"string"}],"checkins":[{"date":"YYYY-MM-DD","pain_during":0,"pain_after":0,"ran":false}],"onset_run_id":"string|null","resolved_date":"YYYY-MM-DD|null","created_at":"ISO-8601","updated_at":"ISO-8601"}
+```
+- `phase` ladder: `rest → walk → walk_run → easy_only → build → full`. Each phase has a `load_cap_pct` (0/0/30/50/80/100) and an allowed-workout-type set. Two clean (`pain ≤ 2`) consecutive *running* check-ins advance one phase; a flare (`pain ≥ 6`) steps back one. `full` = no restriction.
+- `injury_snapshot(home)` folds all open episodes into one view (`load_cap_pct` = the lowest cap, `allowed_types` = the intersection of open phases) so the plan guardrail combines concurrent injuries to the most restrictive. `injured_dates(home, start, end)` lets the weekly calendar mark a session missed *during* an injury as recovery, not a penalised skip.
+- **Safety:** a pain/injury signal routes to `physio-advisor` first; an active episode caps weekly load and restricts workout types in any plan `plan-architect`/`session-coach` produce.
+
+## `body.jsonl` (weight + fueling log — one entry per line)
+Owned by `scripts/body.py` (`ompb_core.log_weight` / `body_trend` / `body_summary`). Weight entries
+and (optionally) per-session fueling notes.
+```json
+{"date":"YYYY-MM-DD","weight_kg":0,"bodyfat_pct":0,"note":"string","source":"nl|web|api","logged_at":"ISO-8601"}
+```
+- `body_trend` reports current weight, 7/30-day moving averages, and the kg/week rate; the safe-loss guard flags a rate faster than ~1%/week of bodyweight. `body_summary` bundles trend + race-weight gap + an under-fueling signal for `fuel-advisor` context.
+- The race-weight **target** is stored as `target_weight_kg` in `goal.json` (merged in, never clobbering the race goal), not here.
+
 ## `strava.json` (Strava credentials — secrets, never commit)
 Written by `scripts/strava_connect.py` after the one-time OAuth flow; read and updated (access token refresh) by `scripts/import_strava.py`. File permissions are set to 600 by the connect script.
 
@@ -169,11 +190,19 @@ When plan-critic approves a plan, the orchestrator writes a timestamped snapshot
 `$OMPB_HOME/plans/plan-<YYYY-MM-DD>.json`. These files are never overwritten, so the full
 history of every approved plan is retained.
 
+## `weather.json` (forecast cache — derived, 2h TTL)
+Written by `scripts/weather.py` (`ompb_core.weather_forecast`). A short-lived cache of the Met.no
+forecast + Open-Meteo air-quality response for the runner's saved location, so repeated coaching
+turns within 2 hours don't re-hit the network. Invalidated on a location change. Derived output;
+gitignored with the rest of `$OMPB_HOME`. Never the source of truth — re-fetched on expiry.
+
 ## `config.json` (app settings)
 ```json
-{ "language": "en" }
+{ "language": "en", "hrmax": 0, "wx_place": "string", "wx_lat": 0, "wx_lon": 0, "wx_tz": "string" }
 ```
 - `language`: `en` | `ko` (default `en`). Set at `/pb-setup`; drives both communication language and the `--lang` of generated artifacts (report, weekly card). Resolution: explicit `--lang` flag → `config.json` `language` → `en`. The runner can change it anytime ("한국어로" / "use English").
+- `hrmax` (optional): a manual HRmax override. When present, the core's analysis and `ompb_core.zones` use it instead of the estimated HRmax for zone boundaries. Set via `ompb_core.set_hrmax` / cleared via `clear_hrmax` (the runner: "내 HRmax는 190이야").
+- `wx_place` / `wx_lat` / `wx_lon` / `wx_tz` (optional): the runner's cached weather location (resolved once from a manual entry, geocoded). Read by `weather_forecast`; set by `weather_set_location`. Changing it invalidates `weather.json`.
 - A home for future settings (units km/mi, timezone, …).
 
 ## Conventions

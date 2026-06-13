@@ -28,5 +28,5 @@ ompb-coach = "apps.coach.app:main"
 packages = ["ompb_core", "apps", "apps.coach"]
 
 [tool.setuptools.package-data]
-ompb_core = ["_bundled/scripts/*.py", "_bundled/templates/*.html"]
+ompb_core = ["_bundled/scripts/*.py", "_bundled/scripts/insight_detectors/*.py", "_bundled/templates/*.html"]
 "apps.coach" = ["_bundled/CLAUDE.md", "_bundled/agents/*.md"]
