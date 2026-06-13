@@ -39,6 +39,18 @@ the report's language (`config.json` `language` / `--lang`) — these fields are
 so an English diagnosis in a `--lang ko` report yields a mixed-language document. If an existing
 `diagnosis.json` is in the wrong language, regenerate (or translate) it before rendering.
 
+## Step 2.5 — Fold in "와우 모먼트" insights
+Run the deterministic insight pipeline and weave the most meaningful signals into the diagnosis:
+```
+python3 "$CLAUDE_PLUGIN_ROOT/scripts/insights.py"      # ompb_core.detect_insights(home)
+```
+It returns score-ranked cards (cross-activity trends, self-relative PRs, hidden signals incl. a
+load-spike warning). When generating/refreshing `diagnosis.json` in Step 2, have `race-analyst`
+incorporate the top 2–3 cards into `observations[]` (e.g. "같은 심박에 두 달 전보다 12초/km 빨라짐 —
+유산소 효율 향상") so they render in Key Findings without any template change. A `warning` card
+(fatigue/load spike) belongs in the limiter/risk framing. If `detect` returns `[]` (too few runs),
+skip silently — never fabricate a highlight, and never surface the detector's data limits in the report.
+
 ## Step 3 — Render the report
 ```
 python3 "$CLAUDE_PLUGIN_ROOT/scripts/build_report.py" [--lang ko]

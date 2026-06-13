@@ -34,6 +34,28 @@ from .core import (
     reclassify,
     analyze_activity,
     export_report,
+    injury_snapshot,
+    injury_episodes,
+    injury_parse,
+    injury_create,
+    injury_checkin,
+    injury_set_phase,
+    injury_resolve,
+    body_trend,
+    body_summary,
+    log_weight,
+    set_target_weight,
+    zones,
+    set_hrmax,
+    clear_hrmax,
+    weather_forecast,
+    weather_advise,
+    weather_set_location,
+    week_overview,
+    week_review_status,
+    week_review_aggregate,
+    week_review_prompt,
+    detect_insights,
 )
 
 __all__ = [
@@ -52,6 +74,34 @@ __all__ = [
     "reclassify",
     "analyze_activity",
     "export_report",
+    # injury
+    "injury_snapshot",
+    "injury_episodes",
+    "injury_parse",
+    "injury_create",
+    "injury_checkin",
+    "injury_set_phase",
+    "injury_resolve",
+    # body / fuel
+    "body_trend",
+    "body_summary",
+    "log_weight",
+    "set_target_weight",
+    # zones
+    "zones",
+    "set_hrmax",
+    "clear_hrmax",
+    # weather
+    "weather_forecast",
+    "weather_advise",
+    "weather_set_location",
+    # weekly review
+    "week_overview",
+    "week_review_status",
+    "week_review_aggregate",
+    "week_review_prompt",
+    # insights
+    "detect_insights",
 ]
 
 __version__ = "0.1.0"

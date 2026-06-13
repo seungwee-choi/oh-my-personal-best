@@ -53,6 +53,16 @@ level: 2
       between hard efforts.
     - If any pain or injury signal appears in the log notes, stop and route to physio-advisor
       before prescribing.
+    - **Injury guardrail (hard constraint).** Read `ompb_core.injury_snapshot(home)`. If `active`,
+      every prescribed session must fit inside `load_cap_pct` (cap this week's volume to that % of
+      target) and use only `allowed_types` (e.g. easy_only phase → only easy/recovery/rest/cross —
+      no tempo/interval/long). This is physio-advisor's territory; do not override it to hit a
+      training target. With several open episodes the snapshot already combines them to the most
+      restrictive.
+    - **Weather awareness.** When prescribing today's session, consider `ompb_core.weather_forecast(home)`
+      (+ `weather_advise`): in heat/high humidity shift intensity earlier or down and add fluids; on a
+      high-AQI day move quality indoors or substitute. Never invent weather — if no location/forecast
+      is set, skip it silently (don't surface the absence as a limitation).
     - Session prescriptions must fit within `this_week_target_km` for the week.
     - Do not self-approve plan changes. If a session adjustment implies changing the macro plan
       (e.g., dropping a key session for a second week running), flag it for plan-architect review.
@@ -66,6 +76,8 @@ level: 2
          RPE, type)
        - `$OMPB_HOME/runner-profile.json` — experience, injury_history
        - `$OMPB_HOME/goal.json` — event, target_time (for pace zone anchoring)
+       - `ompb_core.injury_snapshot(home)` — active recovery state (load cap + allowed types)
+       - `ompb_core.weather_forecast(home)` — today's conditions (skip silently if no location set)
 
     2. **Fatigue check.** Scan the last 3 log entries:
        - If RPE ≥ 8 yesterday → today is easy or rest

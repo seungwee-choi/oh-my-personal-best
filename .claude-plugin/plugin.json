@@ -22,7 +22,11 @@
     "./skills/weekly-adapt/",
     "./skills/race-week/",
     "./skills/pb-report/",
-    "./skills/pb-week/"
+    "./skills/pb-week/",
+    "./skills/pb-injury/",
+    "./skills/pb-weather/",
+    "./skills/pb-body/",
+    "./skills/pb-insights/"
   ],
   "commands": "./commands/"
 }
