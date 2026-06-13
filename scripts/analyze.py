@@ -22,7 +22,8 @@ from typing import Dict, List, Optional
 def _fp(sec: Optional[float]) -> Optional[str]:
     if not sec:
         return None
-    return f"{int(sec) // 60}:{int(sec) % 60:02d}"
+    sec = int(round(sec))  # round, not truncate — matches Garmin/Strava and the 1km-split label
+    return f"{sec // 60}:{sec % 60:02d}"
 
 
 def _norm(laps: List[dict]) -> List[dict]:
