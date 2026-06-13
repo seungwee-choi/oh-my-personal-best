@@ -205,6 +205,16 @@ def test_write_back_locks_type():
         shutil.rmtree(base, ignore_errors=True)
 
 
+# --- pace label rounding ---------------------------------------------------------
+
+def test_fp_rounds_not_truncates():
+    # Pace label must round to the nearest second — matching Garmin/Strava and the 1km-split
+    # label — not truncate. 395.8 s/km is 6:36, not 6:35.
+    assert analyze._fp(395.3) == "6:35"
+    assert analyze._fp(395.8) == "6:36"
+    assert analyze._fp(None) is None
+
+
 if __name__ == "__main__":
     for name, fn in sorted(globals().items()):
         if name.startswith("test_") and callable(fn):

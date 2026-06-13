@@ -26,7 +26,8 @@ import urllib.parse
 import urllib.request
 from datetime import datetime, timezone
 
-from ompb_env import resolve_home, log_path, resolve_lang, star_cta, load_seen, dup_kind, mark_seen
+from ompb_env import (resolve_home, log_path, resolve_lang, star_cta,
+                       load_seen, dup_kind, mark_seen, entry_fingerprint)
 from classify import name_to_type  # shared title-keyword inference (avoid clash w/ local classify())
 
 TOKEN_URL = "https://www.strava.com/oauth/token"
@@ -119,6 +120,23 @@ def classify(sport_type, distance_km, long_threshold):
     return (s or "unknown"), "cross"
 
 
+def _activity_quality(a):
+    """Richness score for choosing between duplicate uploads of the SAME physical run
+    (different Strava ids, identical ``(date, distance)`` fingerprint — e.g. a foot-pod/
+    treadmill copy AND a GPS copy of one run). A GPS/outdoor recording carries the real
+    per-km pace variation in its streams; a treadmill/foot-pod copy is flattened to the
+    average, so its splits read as a near-constant pace. Prefer GPS > non-trainer >
+    auto-recorded so the run that preserves the variation wins."""
+    q = 0
+    if a.get("start_latlng"):   # has a GPS track → real splits/streams survive
+        q += 4
+    if not a.get("trainer"):    # not flagged treadmill/indoor
+        q += 2
+    if not a.get("manual"):     # actually recorded, not hand-entered
+        q += 1
+    return q
+
+
 def to_entry(a, long_threshold):
     dist_m = a.get("distance")
     distance_km = round(dist_m / 1000.0, 3) if dist_m else None
@@ -178,12 +196,14 @@ def _laps_from_detail(detail: dict):
     laps = []
     for lp in detail.get("laps") or []:
         d = lp.get("distance")
-        spd = lp.get("average_speed")
         dur = lp.get("moving_time") or lp.get("elapsed_time")
+        # Pace from distance/time directly. Strava rounds lap ``average_speed`` to 2 dp,
+        # so ``1000/average_speed`` drifts up to ~1 s/km vs the true pace — n:nn the runner
+        # sees in Garmin/Strava. The raw distance + time give the exact figure.
         laps.append({
             "distance_km": round(d / 1000.0, 3) if d else None,
             "duration_s": int(dur) if dur else None,
-            "pace_sec": (1000.0 / spd) if spd and spd > 0 else None,
+            "pace_sec": (dur / (d / 1000.0)) if (d and dur) else None,
             "avg_hr": int(lp["average_heartrate"]) if lp.get("average_heartrate") else None,
             "max_hr": int(lp["max_heartrate"]) if lp.get("max_heartrate") else None,
         })
@@ -283,6 +303,7 @@ def main(argv=None):
     sink = sys.stdout if args.stdout else open(target, "a", encoding="utf-8")
     emitted = skipped = xsrc = errored = page = 0
     by_sport = {}
+    fetched = []  # raw activities across all pages, so we can resolve same-sync duplicates
     try:
         for page in range(1, args.max_pages + 1):
             params = {"per_page": args.per_page, "page": page}
@@ -296,22 +317,46 @@ def main(argv=None):
                 break
             if not acts:
                 break
-            for a in acts:
-                entry = to_entry(a, args.long_threshold)
-                if entry is None:
-                    continue
-                dk = dup_kind(seen, entry)
-                if dk:
-                    skipped += 1
-                    if dk == "cross-source":
-                        xsrc += 1
-                    continue
-                line = json.dumps(entry, ensure_ascii=False)
-                json.loads(line)  # integrity guard
-                mark_seen(seen, entry)
-                sink.write(line + "\n")
-                emitted += 1
-                by_sport[entry["sport"]] = by_sport.get(entry["sport"], 0) + 1
+            fetched.extend(acts)
+
+        # When one run is uploaded from two sources (different ids, same (date, distance)
+        # fingerprint), Strava returns newest-first, so a naive first-wins dedup can keep
+        # the poorer copy (a treadmill/foot-pod upload flattens per-km pace to the average).
+        # Pick the richest upload per fingerprint up front so the GPS/outdoor version wins;
+        # lower-quality duplicates from THIS sync are then skipped as cross-source.
+        best = {}  # fingerprint -> (quality, source_id)
+        for a in fetched:
+            e = to_entry(a, args.long_threshold)
+            if e is None:
+                continue
+            fp = entry_fingerprint(e)
+            if fp is None:
+                continue
+            q = _activity_quality(a)
+            if fp not in best or q > best[fp][0]:
+                best[fp] = (q, e["source_id"])
+
+        for a in fetched:
+            entry = to_entry(a, args.long_threshold)
+            if entry is None:
+                continue
+            fp = entry_fingerprint(entry)
+            if fp is not None and best[fp][1] != entry["source_id"]:
+                skipped += 1  # a lower-quality duplicate of this run within the same sync
+                xsrc += 1
+                continue
+            dk = dup_kind(seen, entry)
+            if dk:
+                skipped += 1
+                if dk == "cross-source":
+                    xsrc += 1
+                continue
+            line = json.dumps(entry, ensure_ascii=False)
+            json.loads(line)  # integrity guard
+            mark_seen(seen, entry)
+            sink.write(line + "\n")
+            emitted += 1
+            by_sport[entry["sport"]] = by_sport.get(entry["sport"], 0) + 1
     finally:
         if sink is not sys.stdout:
             sink.close()
