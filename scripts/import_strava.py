@@ -137,6 +137,18 @@ def _activity_quality(a):
     return q
 
 
+def _best_key(best, fp):
+    """The existing key in ``best`` this fingerprint belongs to — adjacent minute buckets
+    are the same run (mirrors dup_kind) — or ``fp`` itself if none is grouped yet. Keeps the
+    in-sync best-pick consistent with the cross-log dedup."""
+    if fp and fp[0] == "t":
+        for db in (-1, 0, 1):
+            k = ("t", fp[1], fp[2] + db)
+            if k in best:
+                return k
+    return fp
+
+
 def to_entry(a, long_threshold):
     dist_m = a.get("distance")
     distance_km = round(dist_m / 1000.0, 3) if dist_m else None
@@ -184,6 +196,10 @@ def to_entry(a, long_threshold):
         "sport": sport,
         "source": "strava",
         "source_id": f"strava-{a.get('id')}",
+        # UTC start instant — drives the start-time dedup fingerprint (entry_fingerprint),
+        # so two uploads of one run (watch + phone, GPS + treadmill) collapse while distinct
+        # same-day, same-distance sessions stay separate.
+        "started_at": a.get("start_date") or a.get("start_date_local"),
         "logged_at": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
     }
     if type_source:
@@ -299,8 +315,16 @@ def main(argv=None):
     if args.after:
         after_epoch = int(datetime.strptime(args.after, "%Y-%m-%d").replace(tzinfo=timezone.utc).timestamp())
 
-    seen = load_seen(target)
+    # Serialize concurrent syncs of the SAME log. Two overlapping syncs (e.g. the connect
+    # callback + the manual sync FAB) each read the log before the other writes, so both
+    # append the same activity → duplicates. An exclusive lock on the log file makes the
+    # second sync wait, then load_seen() sees the first's writes and skips them. Released on
+    # close() in the finally block. (stdout mode writes no file, so it needs no lock.)
     sink = sys.stdout if args.stdout else open(target, "a", encoding="utf-8")
+    if sink is not sys.stdout:
+        import fcntl
+        fcntl.flock(sink.fileno(), fcntl.LOCK_EX)
+    seen = load_seen(target)  # AFTER the lock, so a concurrent sync's appends are visible
     emitted = skipped = xsrc = errored = page = 0
     by_sport = {}
     fetched = []  # raw activities across all pages, so we can resolve same-sync duplicates
@@ -332,16 +356,17 @@ def main(argv=None):
             fp = entry_fingerprint(e)
             if fp is None:
                 continue
+            k = _best_key(best, fp)
             q = _activity_quality(a)
-            if fp not in best or q > best[fp][0]:
-                best[fp] = (q, e["source_id"])
+            if k not in best or q > best[k][0]:
+                best[k] = (q, e["source_id"])
 
         for a in fetched:
             entry = to_entry(a, args.long_threshold)
             if entry is None:
                 continue
             fp = entry_fingerprint(entry)
-            if fp is not None and best[fp][1] != entry["source_id"]:
+            if fp is not None and best[_best_key(best, fp)][1] != entry["source_id"]:
                 skipped += 1  # a lower-quality duplicate of this run within the same sync
                 xsrc += 1
                 continue
