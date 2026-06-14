@@ -18,6 +18,7 @@ script's own directory on sys.path when run directly, so `from ompb_env import .
 import json
 import os
 import sys
+from datetime import datetime
 
 
 def read_config(home):
@@ -130,15 +131,40 @@ def resolve_plugin_root():
 
 
 # --- cross-source de-duplication --------------------------------------------
-# Activities synced from two sources (e.g. a COROS .fit run also auto-pushed to Strava)
-# get different source_ids, so source_id-only dedup misses them. A fingerprint of
-# (date, distance to 100 m) catches the same physical activity across sources.
+# Activities synced from two sources (e.g. a COROS .fit run also auto-pushed to Strava,
+# or a watch + phone uploading the same run) get different source_ids, so source_id-only
+# dedup misses them. The fingerprint groups them by START TIME: two uploads of one run
+# start within a few seconds of each other, so a 1-minute time bucket catches them — while
+# a *different* session the same day (warm-up vs main set, even at the same distance) lands
+# in a different bucket. This replaced a (date, distance) fingerprint that wrongly merged
+# distinct same-distance sessions AND split one run whose two uploads measured slightly
+# different GPS distances (e.g. 2150 m vs 2154 m rounding to 2.1 vs 2.2).
+
+_FP_BUCKET = 60  # seconds — group an activity's start time into 1-minute buckets
+
+
+def _epoch(iso):
+    """ISO-8601 datetime string → POSIX seconds (float), or None. Accepts a trailing 'Z'."""
+    if not iso:
+        return None
+    try:
+        return datetime.fromisoformat(str(iso).replace("Z", "+00:00")).timestamp()
+    except (ValueError, TypeError):
+        return None
+
 
 def entry_fingerprint(entry):
+    """A cross-source/duplicate-upload fingerprint. Prefers a start-time bucket
+    ``('t', sport, minute_bucket)`` from ``started_at`` (UTC); pre-existing log entries
+    without ``started_at`` fall back to ``('d', date, distance)`` so old logs still dedup.
+    dup_kind() treats adjacent time buckets as the same run (see below)."""
+    ep = _epoch(entry.get("started_at"))
+    if ep is not None:
+        return ("t", entry.get("sport"), int(ep // _FP_BUCKET))
     a = entry.get("actual") or {}
     d = a.get("distance_km")
     if entry.get("date") and d:
-        return (entry["date"], round(float(d), 1))
+        return ("d", entry["date"], round(float(d), 1))
     return None
 
 
@@ -168,7 +194,16 @@ def dup_kind(seen, entry):
     if entry.get("source_id") and entry["source_id"] in seen["ids"]:
         return "id"
     fp = entry_fingerprint(entry)
-    if fp and fp in seen["prints"]:
+    if not fp:
+        return None
+    if fp[0] == "t":
+        # Adjacent minute buckets count as the same run: a ~1 s gap can straddle a bucket
+        # edge, and the two uploads' clocks can differ by a second or two.
+        for db in (-1, 0, 1):
+            if ("t", fp[1], fp[2] + db) in seen["prints"]:
+                return "cross-source"
+        return None
+    if fp in seen["prints"]:
         return "cross-source"
     return None
 
