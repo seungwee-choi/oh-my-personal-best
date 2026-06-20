@@ -40,18 +40,47 @@ _WALK = {"walk"}
 _HIKE = {"hike"}
 
 
+_RETRY_CAP_S = 60  # bulk sync may wait a bit longer than the live surface, but stay bounded so the
+                   # connect-callback / sync-FAB path (off the event loop) never hangs on Strava's
+                   # full 15-min rate-limit window.
+
+
+def _urlopen_retry_429(req, timeout=30):
+    """``urlopen`` honoring ONE Strava 429 (Retry-After) before giving up.
+
+    Strava enforces 200 req/15-min and 2,000/day; a burst returns HTTP 429 with a
+    ``Retry-After`` header. We wait out a single short retry (capped at ``_RETRY_CAP_S``)
+    so a brief burst self-heals, and otherwise let the HTTPError propagate — the paging
+    loop catches it and stops with a 'rate limited' message rather than hanging.
+    Worst-case wall time per call is ``_RETRY_CAP_S + timeout`` (the retry carries its
+    own ``timeout``)."""
+    try:
+        return urllib.request.urlopen(req, timeout=timeout)
+    except urllib.error.HTTPError as e:
+        if e.code != 429:
+            raise
+        try:
+            wait = int(e.headers.get("Retry-After") or 0)
+        except (TypeError, ValueError):
+            wait = 0
+        if wait <= 0 or wait > _RETRY_CAP_S:
+            raise  # no / over-long backoff → degrade now instead of blocking the sync
+        time.sleep(wait)
+        return urllib.request.urlopen(req, timeout=timeout)
+
+
 def _get_json(url, token=None):
     req = urllib.request.Request(url)
     if token:
         req.add_header("Authorization", f"Bearer {token}")
-    with urllib.request.urlopen(req, timeout=30) as resp:
+    with _urlopen_retry_429(req, timeout=30) as resp:
         return json.loads(resp.read().decode())
 
 
 def _post(url, params):
     data = urllib.parse.urlencode(params).encode()
     try:
-        with urllib.request.urlopen(urllib.request.Request(url, data=data, method="POST"), timeout=30) as resp:
+        with _urlopen_retry_429(urllib.request.Request(url, data=data, method="POST"), timeout=30) as resp:
             return json.loads(resp.read().decode())
     except urllib.error.HTTPError as e:  # Strava returns a JSON error body even on 401
         try:
