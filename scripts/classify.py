@@ -11,6 +11,8 @@ then label each run against those bands:
   easy      — aerobic base (the default)
   tempo     — sustained high HR with a steady effort (threshold / cruise)
   interval  — high peak HR with a big HR spread (repeats / surges with recovery)
+  progression — laps get near-monotonically faster through the run (asserted from lap
+                structure by analyze_laps, not derivable from session aggregates here)
   long      — distance ≥ the long-run threshold (endurance, kept distance-first)
 
 Honest limits: from *session aggregates* (no per-lap data) tempo↔interval can't be
@@ -31,7 +33,7 @@ from __future__ import annotations
 
 from typing import Dict, List, Optional
 
-RUN_TYPES = ("easy", "long", "tempo", "interval", "recovery")
+RUN_TYPES = ("easy", "long", "tempo", "interval", "recovery", "progression")
 
 # Activity-name / title keywords → type. Highest-confidence signal (the runner named it).
 # Ordered: a race word wins over "long", "interval" over "tempo", etc. Shared by the CSV
@@ -41,6 +43,8 @@ _NAME_KEYWORDS = [
     ("interval", ["interval", "track", "speed", "vo2", "repeat", "fartlek",
                   "인터벌", "트랙", "스피드", "반복"]),
     ("tempo",    ["tempo", "threshold", "lactate", "cruise", "템포", "역치", "임계"]),
+    ("progression", ["progression", "progressive", "build up", "buildup", "build-up",
+                     "프로그레션", "빌드업", "점증"]),
     ("long",     ["long run", "longrun", "long", "lsd", "endurance", "롱런", "롱 런", "장거리"]),
     ("recovery", ["recovery", "shake out", "shakeout", "regeneration", "regen", "jog",
                   "회복", "리커버리", "조깅"]),

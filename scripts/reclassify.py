@@ -22,7 +22,7 @@ from collections import Counter
 from ompb_env import resolve_home, log_path
 import classify
 
-_REFINABLE = set(classify.RUN_TYPES)  # easy/long/tempo/interval/recovery
+_REFINABLE = set(classify.RUN_TYPES)  # easy/long/tempo/interval/recovery/progression
 
 
 def main(argv=None):
@@ -49,9 +49,11 @@ def main(argv=None):
         if e.get("sport") not in (None, "running"):
             continue
         cur = e.get("type")
-        # Skip coarse-uncategorizable types and anything the runner/source labeled explicitly
-        # (a CSV/Strava title keyword, or Strava's workout_type race/long/workout tag).
-        if cur not in _REFINABLE or e.get("type_source") in ("name", "strava"):
+        # Skip coarse-uncategorizable types and anything a stronger source already settled:
+        # the runner/importer name ("name"), Strava's workout_type ("strava"), or the lap-
+        # structure engine ("laps"). The aggregate pass here has NO per-lap data, so it must
+        # never overwrite a structure-derived type (interval / progression) with a band guess.
+        if cur not in _REFINABLE or e.get("type_source") in ("name", "strava", "laps"):
             continue
         a = e.get("actual") or {}
         dist = a.get("distance_km")
@@ -67,7 +69,7 @@ def main(argv=None):
     sys.stderr.write(
         f"# reclassify: {changed} of {sum(before.values())} runs re-typed"
         + (f" (HRmax≈{hrmax}, HR-calibrated)" if hrmax else " (pace-only; no HR data)") + ".\n")
-    order = ["recovery", "easy", "tempo", "interval", "long"]
+    order = ["recovery", "easy", "tempo", "interval", "progression", "long"]
     sys.stderr.write("#   before: " + ", ".join(f"{k}={before[k]}" for k in order if before[k]) + "\n")
     sys.stderr.write("#   after:  " + ", ".join(f"{k}={after[k]}" for k in order if after[k]) + "\n")
 

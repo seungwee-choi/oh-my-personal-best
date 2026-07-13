@@ -223,6 +223,9 @@ def analyze_laps(laps: List[dict], distance_km: Optional[float] = None,
 
     SIG = 30  # sec/km — an intentional intensity swing (work vs rest)
     progression = _is_progression(paces)
+    # Assert the progression TYPE only on a clear net speed-up (≥25 s/km end-to-start) — a mild
+    # drift is left to the calibrated classifier. _is_progression already guarantees near-monotonic.
+    prog_type = "progression" if (progression and paces[0] - paces[-1] >= 25) else None
     has_hr = any(x.get("avg_hr") for x in L)
 
     def _result(structure, typ, conf, notes, reps=None, rep_summary=None):
@@ -230,9 +233,10 @@ def analyze_laps(laps: List[dict], distance_km: Optional[float] = None,
                 "reps": reps or [], "rep_summary": rep_summary, "notes": notes}
 
     # The engine asserts a TYPE only for what the laps make UNAMBIGUOUS — interval (repeated
-    # work with rests, confirmed by HR) and long (by distance). Pace varies on any run
-    # (terrain, fatigue), so "this block is faster" alone is NOT tempo; the easy/tempo/recovery
-    # call needs the runner's calibrated HR bands → type=None defers it to the classifier.
+    # work with rests, confirmed by HR), progression (a clear near-monotonic speed-up), and long
+    # (by distance). Pace varies on any run (terrain, fatigue), so "this block is faster" alone is
+    # NOT tempo; the easy/tempo/recovery call needs the runner's calibrated HR bands → type=None
+    # defers it to the classifier.
     if spread >= SIG:
         thresh = fast + spread * 0.45
         flags = [p <= thresh for p in paces]            # True = work lap (faster)
@@ -270,12 +274,14 @@ def analyze_laps(laps: List[dict], distance_km: Optional[float] = None,
                            [f"sustained ~{_fp(statistics.mean([w['pace'] for w in work]))}/km block — "
                             "intensity from the calibrated classifier"])
         if progression and intense:
-            return _result("progression", "long" if total_km >= long_km else None, "medium",
+            return _result("progression",
+                           prog_type or ("long" if total_km >= long_km else None), "medium",
                            ["paces step down through the run — progression effort"])
         # variation without intensity evidence → just terrain/fatigue on a steady run; fall through.
 
     if progression:
-        return _result("progression", "long" if total_km >= long_km else None, "low",
+        return _result("progression",
+                       prog_type or ("long" if total_km >= long_km else None), "low",
                        ["paces drift faster through the run"])
     return _result("steady", "long" if total_km >= long_km else None, "medium",
                    ["uniform-effort run — easy/tempo/recovery from the calibrated classifier"])
