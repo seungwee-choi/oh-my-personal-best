@@ -72,6 +72,8 @@ def _write_back(home, source_id, new_type):
     for e in entries:
         if e.get("source_id") == source_id:
             old = e.get("type")
+            if e.get("type_source") == "user":  # a user correction is ground truth — never overwrite
+                return {"source_id": source_id, "from": old, "to": old, "wrote": False}
             noop = (old == new_type and e.get("type_source") == "laps")
             e["type"], e["type_source"] = new_type, "laps"
             break
