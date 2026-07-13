@@ -44,6 +44,15 @@ def test_progression():
     laps = [_lap(1.0, p) for p in (360, 340, 320, 300, 280, 260)]
     r = analyze.analyze_laps(laps)
     assert r["structure"] == "progression"
+    assert r["type"] == "progression"  # clear ≥25 s/km speed-up → asserted as a real type
+
+
+def test_progression_weak_drift_defers_type():
+    # near-monotonic but only ~20 s/km net → below the 25 s/km gate → structure noted but the
+    # TYPE is deferred (a slightly-faster-finishing easy run is not a progression workout).
+    laps = [_lap(1.0, p) for p in (360, 356, 352, 348, 344, 340)]
+    r = analyze.analyze_laps(laps)
+    assert r["structure"] == "progression" and r["type"] is None
 
 
 def test_steady_defers_type():
