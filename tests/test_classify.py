@@ -33,6 +33,13 @@ def test_tempo_sustained_high_hr():
     assert classify.refine(_a(avg_hr=158, max_hr=164, pace="4:20"), 9.0, REF) == "tempo"
 
 
+def test_hard_sustained_moderate_spread_is_tempo_not_easy():
+    # avg ~90% HRmax sustained with a normal ±15 bpm swing → not interval (no big peak swing);
+    # the old tight spread_steady gate leaked this into "easy". A rolling/hilly threshold run
+    # (e.g. hill-reps averaged) is a workout, so it must read tempo, not easy.
+    assert classify.refine(_a(avg_hr=168, max_hr=183, pace="4:00"), 10.0, REF) == "tempo"
+
+
 def test_recovery_low_slow_short():
     assert classify.refine(_a(avg_hr=120, max_hr=135, pace="7:00", duration_s=1800), 5.0, REF) == "recovery"
     # low HR but long/normal distance → NOT recovery (just easy)
