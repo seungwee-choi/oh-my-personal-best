@@ -50,10 +50,10 @@ def main(argv=None):
             continue
         cur = e.get("type")
         # Skip coarse-uncategorizable types and anything a stronger source already settled:
-        # the runner/importer name ("name"), Strava's workout_type ("strava"), or the lap-
-        # structure engine ("laps"). The aggregate pass here has NO per-lap data, so it must
-        # never overwrite a structure-derived type (interval / progression) with a band guess.
-        if cur not in _REFINABLE or e.get("type_source") in ("name", "strava", "laps"):
+        # a user correction ("user", authoritative ground truth), the runner/importer name
+        # ("name"), Strava's workout_type ("strava"), or the lap-structure engine ("laps"). The
+        # aggregate pass here has NO per-lap data, so it must never overwrite those with a guess.
+        if cur not in _REFINABLE or e.get("type_source") in ("name", "strava", "laps", "user"):
             continue
         a = e.get("actual") or {}
         dist = a.get("distance_km")
