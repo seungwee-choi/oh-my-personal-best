@@ -126,8 +126,10 @@ def main(argv=None):
         except Exception as e:  # noqa: BLE001 — streams are best-effort; laps already stand
             result["notes"].append(f"streams unavailable: {e}")
 
-    # Persist the high-confidence type back to the log (interval/long only), if requested.
-    if args.write and result.get("type") in ("interval", "long") and result.get("confidence") in ("high", "medium"):
+    # Persist the high-confidence structural type back to the log, if requested. These are the
+    # types the lap engine asserts from structure (interval / progression) or distance (long) —
+    # each stronger than an aggregate band guess.
+    if args.write and result.get("type") in ("interval", "long", "progression") and result.get("confidence") in ("high", "medium"):
         sid = (f"strava-{args.strava.replace('strava-', '')}" if args.strava
                else os.path.splitext(os.path.basename(args.fit))[0])
         wb = _write_back(args.home, sid, result["type"])

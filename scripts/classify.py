@@ -148,9 +148,13 @@ def refine(actual: Optional[dict], distance_km: Optional[float], ref: Dict,
             and spread >= ref["spread_interval"] and quality_pace_ok):
         return "interval"
 
-    # Tempo: sustained high HR held steady (small spread) — threshold / cruise.
+    # Tempo: sustained high HR (≥tempo_hr). Interval is already ruled out above (it needs a hard
+    # peak AND a big swing), so a high-average effort reaching here is a sustained one — allow a
+    # moderate spread (up to the interval threshold), not only a near-flat one. The old
+    # spread_steady bound leaked genuinely hard runs (avg ~90% HRmax with a normal ±15 bpm swing)
+    # into "easy" — a hilly/rolling threshold run is still a workout.
     if (ref.get("tempo_hr") and avg and avg >= ref["tempo_hr"]
-            and (spread is None or spread <= ref.get("spread_steady", 1e9))
+            and (spread is None or spread <= ref.get("spread_interval", 1e9))
             and quality_pace_ok):
         return "tempo"
 
