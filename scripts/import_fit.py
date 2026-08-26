@@ -12,7 +12,9 @@ fatigue / overtraining analysis. Pace and cadence are only emitted for running, 
 they are meaningful.
 
 Each emitted line carries `source: "fit"` and `source_id: "<filename stem>"` so repeated
-imports can be de-duplicated idempotently (see --dedup-against).
+imports can be de-duplicated idempotently (see --dedup-against), plus `started_at` (the UTC
+start instant) so a run also synced from Strava is recognized as the same activity rather than
+imported a second time.
 
 Requires: fitdecode (`pip install fitdecode`). FIT is a binary format; it cannot be
 parsed with the standard library alone.
@@ -88,6 +90,23 @@ def _local_date(start_time, tz: Optional["dt.tzinfo"]) -> Optional[str]:
         start_time = start_time.replace(tzinfo=dt.timezone.utc)
     local = start_time.astimezone(tz) if tz is not None else start_time.astimezone()
     return local.date().isoformat()
+
+
+def _utc_iso(start_time) -> Optional[str]:
+    """Convert a FIT `session` start_time to the UTC instant string `YYYY-MM-DDTHH:MM:SSZ`.
+
+    Byte-identical in shape to Strava's `start_date` (import_strava.py's `started_at`), because
+    entry_fingerprint() must bucket both sources the same way — a FIT run and its Strava twin
+    only collapse if they parse to the same epoch. Returns None when the field is absent or is
+    not a datetime (fitdecode leaves pre-1990 `date_time` values as raw ints): a missing start
+    instant is omitted, never guessed, so such entries keep the legacy (date, distance)
+    fingerprint instead of a wrong time bucket.
+    """
+    if not isinstance(start_time, dt.datetime):
+        return None
+    if start_time.tzinfo is None:  # fitdecode yields UTC-aware; assume UTC if a processor didn't
+        start_time = start_time.replace(tzinfo=dt.timezone.utc)
+    return start_time.astimezone(dt.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
 
 
 def _pace_from_speed(speed_mps: Optional[float]) -> Optional[str]:
@@ -198,6 +217,13 @@ def session_to_entry(msg, source_id: str, tz, long_threshold: float,
         "source_id": source_id,
         "logged_at": dt.datetime.now(dt.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
     }
+    started_at = _utc_iso(start)
+    if started_at is not None:
+        # UTC start instant — same field, same format as import_strava.py, so the start-time
+        # dedup fingerprint ('t' form) applies to FIT too. Without it every FIT entry fell back
+        # to the ('d', date, distance) form, which can never match a Strava twin's 't' form —
+        # so a run imported from both sources was stored twice.
+        entry["started_at"] = started_at
     if reclassified_from is not None:
         entry["reclassified_from_sport"] = reclassified_from  # provenance for audit
     return entry
