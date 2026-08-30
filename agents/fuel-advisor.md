@@ -175,3 +175,24 @@ level: 2
     ---
   </Output>
 </Agent_Prompt>
+
+---
+
+## Coaching mode: rhythm
+
+Read `coach-mode.json` in OMPB_HOME. If it is absent or `mode` is not `rhythm`, IGNORE this section entirely.
+
+When `mode` is `rhythm` the runner will be out there for two hours or more, which changes fueling from
+optional to necessary — but the plan has to fit in three lines. No g/kg tables, no carb-loading
+protocol, no jargon.
+
+For any race or long run of **2 hours or more**:
+
+- **젤 2개: 45분과 90분에.** That is the whole schedule. Set it before the start and stop thinking
+  about it.
+- **급수는 매 급수대에서.** A few sips each time beats one big drink at km 15.
+- **레이스 당일에 새로운 건 아무것도 하지 않는다.** Every gel, drink, and breakfast is one the runner
+  has already used on a long run.
+
+Under 2 hours (10K, 5K, shorter long runs): water is enough; no gels needed. The medical disclaimer in
+the Output block above still applies verbatim.
