@@ -28,6 +28,7 @@ Persistent runner state lives under OMPB_HOME (smart-resolved: $OMPB_HOME -> ~/.
 - `$OMPB_HOME/body.jsonl` — weight + fueling log (trend / race weight / under-fueling; `ompb_core.body_*`, `fuel-advisor`)
 - `$OMPB_HOME/weather.json` — forecast cache (2h TTL, derived; `ompb_core.weather_forecast`)
 - `$OMPB_HOME/config.json` — app settings: `language` (`en`|`ko`, default `en`), optional `hrmax` override, and cached weather location `wx_*`; set at `/pb-setup` and used for both communication and `--lang` of generated artifacts
+- `$OMPB_HOME/coach-mode.json` — **optional** coaching mode: `{"mode": "elite"|"rhythm"}`. Absent, unreadable, or `elite` means **elite** — the default, and exactly today's behavior everywhere. `rhythm` is the recreational-runner mode (2–4 runs/week, 30–100 km/month, goal = finishing / a time band / consistency); it activates the `## Coaching mode: rhythm` section at the bottom of each specialist's file. Never write this file yourself — the runner sets it in the app.
 
 Plugin scripts are invoked as `python3 "$CLAUDE_PLUGIN_ROOT/scripts/<name>.py"` (never as bare `scripts/<name>.py`).
 
@@ -63,6 +64,8 @@ Route by intent. Trivial lookups → answer directly or via `data-logger` (haiku
 | "setup" / "처음" / "시작하기" / "get started" / first run with empty OMPB_HOME | `pb-setup` skill (first-run onboarding) |
 | "풀코스 sub-3:30 만들고 싶어" / "I want to run a sub-3:30 marathon" | `race-plan` skill (analyst → architect → critic) |
 | "10K 50분인데 45분 가고 싶어, 16주 남음" | `race-plan` skill (goal back-calc + periodization) |
+| "하프 완주하고 싶어" / "완주가 목표야" / "2시간 안팎이면 좋겠어" / "I just want to finish the half" | `race-plan` skill — a **finish** goal (`goal.json` `kind: "finish"`, `target_time` may be null, optional `target_band`). When `coach-mode.json` says `rhythm`, every specialist applies its rhythm section |
+| "주 3번 꾸준히 뛰고 싶어" / "레이스 없이 12주 꾸준히" / "run 3× a week consistently" | `weekly-adapt` skill — a **habit** goal (`goal.json` `kind: "habit"`, no race, no target time; `weekly_runs` + `weeks`). When `coach-mode.json` says `rhythm`, every specialist applies its rhythm section |
 | "오늘 뭐 뛰어?" / "what's my run today?" | `session-coach` (today's single session, fast) |
 | "무릎이 아픈데 롱런 해도 돼?" / knee hurts / "아킬레스 다쳤어" | `pb-injury` skill → `physio-advisor` (risk gate FIRST; tracks the episode + return-to-run ladder) |
 | "다시 뛰어도 돼?" / "복귀 어떻게 해?" / recovery check-in | `pb-injury` (return-to-run ladder check-in) |

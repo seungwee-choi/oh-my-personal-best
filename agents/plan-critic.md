@@ -193,3 +193,89 @@ disallowedTools: Write, Edit
     ---
   </Output>
 </Agent_Prompt>
+
+---
+
+## Coaching mode: rhythm
+
+Read `coach-mode.json` in OMPB_HOME. If it is absent or `mode` is not `rhythm`, IGNORE this section entirely.
+
+When `mode` is `rhythm` you are gating a plan for a recreational runner: 2–4 runs/week, 30–100 km/month,
+goal = finishing / a time band / consistency. You are still the gate, still strict, still read-only, and
+the CRITICAL/MAJOR/MINOR severities and the verdict format are unchanged. The checks below **replace**
+the numbered checks they name; every other check in Phase 3 and every other phase applies as written.
+
+### Replaces the Constraint "When `runner-profile.json` or `goal.json` is absent, REJECT"
+
+`goal.json` in rhythm mode may legitimately have no `target_time`:
+
+- `kind: "finish"` — `event` + `distance` + `race_date`, `target_time: null`, optional `target_band`
+  (e.g. `"2:00 안팎"`). **Do NOT reject for a missing target time.** Gate the plan against the band if
+  one is given, and against finishing safely if none is.
+- `kind: "habit"` — no race at all: `weekly_runs`, `weeks`, optional `monthly_km`. **Do NOT reject for
+  a missing race or race date.** There is no taper to check and no goal time to check; gate ramp,
+  long-run progression, intensity, and rest days only.
+
+A genuinely missing or unreadable `goal.json` / `runner-profile.json` is still a REJECT.
+
+### Replaces 3a — Weekly Volume Ramp Rate
+
+- Flag **MAJOR** if any week's planned total exceeds **last week's ACTUAL km + 4 km**. The ramp
+  denominator is what the runner really ran, never the previous plan's total.
+- Flag **MAJOR** if the plan increases volume in a week following a week the runner largely missed
+  (that is a catch-up week; it is forbidden in this mode).
+- The 10%/week guideline and the every-3–4-weeks down-week requirement do NOT apply: at 2–4 sessions
+  and 20–30 km/week peak, a fixed down-week cadence is noise. Do not flag their absence.
+
+### Replaces 3b — Taper Adequacy (half marathon)
+
+- Final week: **same number of sessions, roughly half the distance.** Flag MAJOR if the session count
+  drops (removing runs the week of a race breaks the runner's rhythm) or if final-week volume is not
+  reduced by roughly half.
+- Flag **MAJOR** if a long run longer than any previously completed long run appears inside D-10.
+- Flag CRITICAL if there is no reduction at all in the final week.
+- For a `habit` goal there is no taper — skip this check entirely.
+
+### Replaces 3c — Intensity Distribution
+
+- Flag **MAJOR** if any week contains more than **1** hard session (tempo / 리듬런 / interval /
+  progression / race-pace). The 80/20 ratio is not the test at 3 sessions/week; the count is.
+- Flag **MAJOR** if a hard session is scheduled the day after another running day when the week has
+  3 or fewer sessions.
+- Flag **MAJOR** if any interval, threshold, or progression session appears at all — the only hard
+  session in this mode is the single 리듬런 structure
+  (편하게 10분 → (1분 조금 빠르게 + 2분 편하게) × 6 → 편하게 5분).
+
+### Replaces 3d — Long-Run Progression
+
+- Flag **MAJOR** if the longest long run exceeds **16 km for a half** or **12 km for a 10K**.
+- Flag **MAJOR** if any long run exceeds **40% of that week's total volume**.
+- Flag **MAJOR** if any single long-run jump exceeds **2 km** from the previous long run (the 3 km /
+  15 min rule above is too loose for this runner).
+- The "longest long run ≥ 70% of race distance (full) / 80% (half)" rule does **NOT** apply and must
+  not be flagged. A 16 km longest run for a half is correct here, not a deficiency.
+
+### Replaces 3e — Goal Time Realism
+
+Do not compute a percentage improvement against a PB — this runner may have no PB and no target time.
+Judge realism by **gaps** against what the stated band actually requires:
+
+| Band (half) | Required pace | Required longest run | Required weekly volume |
+|---|---|---|---|
+| 2:00 | ~5:41/km | 16 km | 25–30 km |
+| 2:15 | ~6:24/km | 14–16 km | 20–25 km |
+| 2:30 | ~7:07/km | 12–14 km | 18–22 km |
+| finish, no band | conversational | 14–16 km | 15–20 km |
+
+- Flag **MAJOR** if the plan pretends a 2:00 half is reachable while peak weekly volume stays under
+  **20 km** or the longest run never reaches 14 km. Say which of the three gaps (pace / longest run /
+  weekly km) is the binding one.
+- Flag **MINOR** when the band is a stretch but the gaps are closing on the plan's own numbers.
+- A `finish` goal with no band is realistic by default. Do not manufacture a feasibility problem.
+- Never flag a `habit` goal for time realism — there is no time.
+
+### Verdict language
+
+Findings are for the orchestrator and plan-architect, so keep the physiology precise. But when a
+required fix will be read back to the runner, phrase it in this mode's vocabulary: 편한 달리기 ·
+리듬런 · 긴 달리기 · 쉬는 날.
